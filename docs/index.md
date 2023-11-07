@@ -1,3 +1,3 @@
 # Hello world!
 
-This is awesome.
+This is the future home of the DataONE chart repo.
