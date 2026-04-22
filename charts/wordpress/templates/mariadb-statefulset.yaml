@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "wparctic.mariadbName" . }}
+  labels:
+    {{- include "wparctic.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mariadb
+spec:
+  serviceName: {{ include "wparctic.mariadbName" . }}-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: mariadb
+  template:
+    metadata:
+      labels:
+        {{- include "wparctic.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mariadb
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mariadb
+          image: {{ include "wparctic.imageRef" .Values.mariadb.image }}
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MARIADB_AUTO_UPGRADE
+              value: {{ .Values.mariadb.autoUpgrade | ternary "1" "0" | quote }}
+            - name: MARIADB_DATABASE
+              value: {{ .Values.mariadb.auth.database | quote }}
+            - name: MARIADB_USER
+              value: {{ .Values.mariadb.auth.username | quote }}
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mariadb.existingSecret }}
+                  key: {{ .Values.mariadb.auth.passwordSecretKey }}
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mariadb.existingSecret }}
+                  key: {{ .Values.mariadb.auth.rootPasswordSecretKey }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - mariadb-admin ping -uroot -p${MARIADB_ROOT_PASSWORD}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - mariadb-admin status -uroot -p${MARIADB_ROOT_PASSWORD}
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+              subPath: {{ .Values.mariadb.persistence.subPath }}
+      volumes:
+        - name: mariadb-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.mariadb.persistence.existingClaim }}

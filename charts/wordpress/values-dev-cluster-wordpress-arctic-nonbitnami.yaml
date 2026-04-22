@@ -1,0 +1,35 @@
+replicaCount: 1
+## if replicaCount < 2, set podDisruptionBudget.enabled to false, to avoid eviction issues
+## Otherwise, set to true
+podDisruptionBudget:
+  enabled: false
+
+wordpress:
+  existingSecret: wparctic-wordpress
+  persistence:
+    existingClaim: wparctic-wordpress-0
+  resources:
+    requests:
+      cpu: "250m"
+      memory: 500Mi
+    limits:
+      cpu: "500m"
+      memory: 1Gi
+
+mariadb:
+  existingSecret: wparctic-mariadb
+  persistence:
+    existingClaim: wparctic-wordpress-mariadbd-0
+  resources:
+    requests:
+      cpu: "250m"
+      memory: 500Mi
+    limits:
+      cpu: "500m"
+      memory: 1Gi
+
+ingress:
+  host: &hostname metacat-dev.test.dataone.org
+
+secondaryIngress:
+  host: *hostname

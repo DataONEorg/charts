@@ -1,0 +1,23 @@
+# Creates a persistent volume claim for use by wordpress
+#
+# This should be done only one time, separately from the helm install/upgrade cycle
+#
+# NOTE: ensure that a PersistentVolume has already been created before creating
+#       the PersistentVolumeClaim!
+#
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wparctic-wordpress-0
+  namespace: brooke
+  labels:
+    velero.io/exclude-from-backup: "true"
+spec:
+  accessModes:
+    # for non-statefulset deployments, pv & pvc need to be RWX for rolling update to complete
+    - ReadWriteMany
+  volumeName: cephfs-wpbrooke-wordpress-wpfiles
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: csi-cephfs-sc

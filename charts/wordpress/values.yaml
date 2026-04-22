@@ -1,0 +1,139 @@
+replicaCount: 2
+## if replicaCount < 2, set podDisruptionBudget.enabled to false, to avoid eviction issues
+## Otherwise, set to true
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+wordpress:
+  image:
+    repository: docker.io/library/wordpress
+    tag: "6.8.2-php8.2-apache"
+    digest: ""
+    pullPolicy: IfNotPresent
+  existingSecret: wparctic-wordpress
+  persistence:
+    existingClaim: wparctic-wordpress-0
+    subPath: wp-content
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+mariadb:
+  autoUpgrade: true
+  image:
+    repository: docker.io/library/mariadb
+    tag: "11.4"
+    digest: ""
+    pullPolicy: IfNotPresent
+  existingSecret: wparctic-mariadb
+  auth:
+    database: arcticadata_wp
+    username: arcticadata
+    passwordSecretKey: mariadb-password
+    rootPasswordSecretKey: mariadb-root-password
+  persistence:
+    existingClaim: wparctic-wordpress-mariadbd-0
+    subPath: data
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+robotsTxt:
+  enabled: true
+  existingConfigMap: wparctic-wordpress-robots-txt
+  key: robots.txt
+
+ingress:
+  enabled: true
+  className: nginx
+  host: localhost
+  tlsSecretName: ingress-nginx-tls-cert
+  pathType: Prefix
+  path: /
+  annotations:
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/(sitemap.+) /metacat/sitemaps/$1 redirect;
+
+      ################################################################################################
+      # from arctica:/etc/apache2/sites-enabled/arcticdata.io-ssl.conf
+      ################################################################################################
+
+      # Prevents being framed by external domains
+      add_header X-Frame-Options "SAMEORIGIN" always;
+
+      ########################################################
+      # Link old blog articles to their new locations (legacy)
+      ########################################################
+
+      if ($request_uri = "/dataset-highlight-subsistence-harvests-in-alaskan-communities-along-the-bering-sea-with-dr-james-fall") {
+        return 301 https://arcticdata.io/blog/2018/06/dataset-highlight-subsistence-harvests-in-alaskan-communities-along-the-bering-sea-with-dr-james-fall;
+      }
+      if ($request_uri = "/dataset-highlight-phenological-mismatch-in-the-arctic-with-dr-kathy-kelsey") {
+        return 301 https://arcticdata.io/blog/2018/08/dataset-highlight-phenological-mismatch-in-the-arctic-with-dr-kathy-kelsey;
+      }
+      if ($request_uri = "/dataset-highlight-learning-from-the-hunters-in-savoonga-with-dr-henry-huntington") {
+        return 301 https://arcticdata.io/blog/2019/05/dataset-highlight-learning-from-the-hunters-in-savoonga-with-dr-henry-huntington;
+      }
+      if ($request_uri = "/dataset-highlight-investigating-rotten-ice-with-dr-karen-junge") {
+        return 301 https://arcticdata.io/blog/2018/07/dataset-highlight-investigating-rotten-ice-with-dr-karen-junge;
+      }
+      if ($request_uri = "/dataset-highlight-exploring-the-energy-clouds-atmosphere-and-precipitation-in-summit-greenland-through-icecaps-with-dr-matthew-shupe") {
+        return 301 https://arcticdata.io/blog/2018/10/dataset-highlight-exploring-the-energy-clouds-atmosphere-and-precipitation-in-summit-greenland-through-icecaps-with-dr-matthew-shupe;
+      }
+      if ($request_uri = "/dataset-highlight-dissolved-organic-carbon-with-dr-rose-cory") {
+        return 301 https://arcticdata.io/blog/2018/04/dataset-highlight-dissolved-organic-carbon-with-dr-rose-cory;
+      }
+      if ($request_uri = "/dataset-highlight-discovering-the-connections-between-mountain-glaciers-and-arctic-groundwater-with-dr-anna-liljedahl") {
+        return 301 https://arcticdata.io/blog/2018/10/dataset-highlight-discovering-the-connections-between-mountain-glaciers-and-arctic-groundwater-with-dr-anna-liljedahl;
+      }
+      if ($request_uri = "/dataset-highlight-data-provenance-and-arctic-soil-bacteria") {
+        return 301 https://arcticdata.io/blog/2018/03/dataset-highlight-data-provenance-and-arctic-soil-bacteria;
+      }
+
+secondaryIngress:
+  enabled: true
+  className: nginx
+  host: localhost
+  tlsSecretName: ingress-nginx-tls-cert
+  pathType: Prefix
+  path: /wp-admin
+  annotations:
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "85m"
+#    nginx.ingress.kubernetes.io/auth-type: basic
+#    nginx.ingress.kubernetes.io/auth-secret: wparctic-basic-auth
+#    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - admin"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      # Prevent XMLRPC attacks on Wordpress
+      if ($request_uri ~* "^/xmlrpc\.php$") {
+        return 403;
+      }
+    nginx.ingress.kubernetes.io/whitelist-source-range: |
+      128.111.61.0/24,
+      128.111.64.0/22,
+      128.111.85.0/24,
+      128.111.180.0/22,
+      128.111.188.0/22,
+      128.111.196.0/23,
+      207.71.230.208/29
+  extraPaths:
+    - path: /wp-login.php
+      pathType: Exact
+    - path: /wp-admin/admin-ajax.php
+      pathType: Exact
+
+nameOverride: ""
+fullnameOverride: ""
+imagePullSecrets: []

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: adc-wordpress-stack
+description: Helm chart for WordPress + in-cluster MariaDB for arcticdata.io
+type: application
+version: 0.1.0
+appVersion: "6.8.2"
