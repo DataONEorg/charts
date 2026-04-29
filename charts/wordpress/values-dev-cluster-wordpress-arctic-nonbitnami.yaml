@@ -1,8 +1,8 @@
-replicaCount: 1
+replicaCount: 3
 ## if replicaCount < 2, set podDisruptionBudget.enabled to false, to avoid eviction issues
 ## Otherwise, set to true
 podDisruptionBudget:
-  enabled: false
+  enabled: true
 
 wordpress:
   existingSecret: wparctic-wordpress

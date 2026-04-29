@@ -18,7 +18,7 @@ spec:
             pathType: {{ .Values.adminIngress.pathType }}
             backend:
               service:
-                name: {{ include "wparctic.wordpressName" . }}
+                name: {{ include "wparctic.wordpressName" . }}-rw
                 port:
                   name: http
           {{- range .Values.adminIngress.extraPaths }}
@@ -26,7 +26,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "wparctic.wordpressName" $ }}
+                name: {{ include "wparctic.wordpressName" $ }}-rw
                 port:
                   name: http
           {{- end }}
