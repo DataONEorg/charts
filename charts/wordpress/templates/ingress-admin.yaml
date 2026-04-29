@@ -1,4 +1,4 @@
-{{- if .Values.secondaryIngress.enabled }}
+{{- if .Values.adminIngress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,31 +7,31 @@ metadata:
     {{- include "wparctic.labels" . | nindent 4 }}
     app.kubernetes.io/component: wordpress
   annotations:
-    {{- toYaml .Values.secondaryIngress.annotations | nindent 4 }}
+    {{- toYaml .Values.adminIngress.annotations | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.secondaryIngress.className }}
+  ingressClassName: {{ .Values.adminIngress.className }}
   rules:
-    - host: {{ .Values.secondaryIngress.host }}
+    - host: {{ .Values.adminIngress.host }}
       http:
         paths:
-          - path: {{ .Values.secondaryIngress.path }}
-            pathType: {{ .Values.secondaryIngress.pathType }}
+          - path: {{ .Values.adminIngress.path }}
+            pathType: {{ .Values.adminIngress.pathType }}
             backend:
               service:
                 name: {{ include "wparctic.wordpressName" . }}
                 port:
-                  number: {{ .Values.wordpress.service.port }}
-          {{- range .Values.secondaryIngress.extraPaths }}
+                  name: http
+          {{- range .Values.adminIngress.extraPaths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}
             backend:
               service:
                 name: {{ include "wparctic.wordpressName" $ }}
                 port:
-                  number: {{ $.Values.wordpress.service.port }}
+                  name: http
           {{- end }}
   tls:
     - hosts:
-        - {{ .Values.secondaryIngress.host }}
-      secretName: {{ .Values.secondaryIngress.tlsSecretName }}
+        - {{ .Values.adminIngress.host }}
+      secretName: {{ .Values.adminIngress.tlsSecretName }}
 {{- end }}

@@ -26,6 +26,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: wordpress
           image: {{ include "wparctic.imageRef" .Values.wordpress.image }}
@@ -49,6 +51,9 @@ spec:
               value: |
                 define('WP_HOME', 'https://{{ .Values.ingress.host }}');
                 define('WP_SITEURL', 'https://{{ .Values.ingress.host }}');
+                define( 'FORCE_SSL_ADMIN', true );
+                if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) $_SERVER['HTTPS'] = 'on';
+                define('WP_AUTO_UPDATE_CORE', false);
           readinessProbe:
             httpGet:
               path: /

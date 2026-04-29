@@ -20,7 +20,7 @@ spec:
               service:
                 name: {{ include "wparctic.wordpressName" . }}
                 port:
-                  number: {{ .Values.wordpress.service.port }}
+                  name: http
   tls:
     - hosts:
         - {{ .Values.ingress.host }}

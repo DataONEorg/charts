@@ -29,7 +29,7 @@ mariadb:
       memory: 1Gi
 
 ingress:
-  host: &hostname metacat-dev.test.dataone.org
+  host: &hostname wp-dev.test.dataone.org
 
-secondaryIngress:
+adminIngress:
   host: *hostname

@@ -22,6 +22,8 @@ wordpress:
     limits:
       cpu: "4"
       memory: 4Gi
+  service:
+    port: 80
 
 mariadb:
   autoUpgrade: true
@@ -101,7 +103,7 @@ ingress:
         return 301 https://arcticdata.io/blog/2018/03/dataset-highlight-data-provenance-and-arctic-soil-bacteria;
       }
 
-secondaryIngress:
+adminIngress:
   enabled: true
   className: nginx
   host: localhost
@@ -109,13 +111,17 @@ secondaryIngress:
   pathType: Prefix
   path: /wp-admin
   annotations:
-    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "85m"
 #    nginx.ingress.kubernetes.io/auth-type: basic
 #    nginx.ingress.kubernetes.io/auth-secret: wparctic-basic-auth
 #    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - admin"
     nginx.ingress.kubernetes.io/configuration-snippet: |
+      # Normalize admin URL without a trailing slash before proxying to WordPress.
+      if ($request_uri = "/wp-admin") {
+        return 308 /wp-admin/;
+      }
+
       # Prevent XMLRPC attacks on Wordpress
       if ($request_uri ~* "^/xmlrpc\.php$") {
         return 403;
@@ -134,6 +140,10 @@ secondaryIngress:
     - path: /wp-admin/admin-ajax.php
       pathType: Exact
 
+podSecurityContext:
+#  runAsUser: 1001
+#  fsGroup: 1001
+#  fsGroupChangePolicy: OnRootMismatch
 nameOverride: ""
 fullnameOverride: ""
 imagePullSecrets: []
