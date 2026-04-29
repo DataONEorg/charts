@@ -1,0 +1,12 @@
+{{- $roReplicas := max (sub (int .Values.replicaCount) 1) 0 -}}
+{{- if gt $roReplicas 0 }}
+{{- include "wparctic.wordpressDeployment" (dict
+  "Values" .Values
+  "Release" .Release
+  "Chart" .Chart
+  "replicas" $roReplicas
+  "role" "ro"
+  "readOnlyVolume" true
+  "disallowFileMods" true
+) }}
+{{- end }}
