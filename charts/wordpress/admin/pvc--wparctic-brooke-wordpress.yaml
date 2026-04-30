@@ -9,14 +9,14 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wparctic-wordpress-0
-  namespace: brooke
+  namespace: arctic
   labels:
     velero.io/exclude-from-backup: "true"
 spec:
   accessModes:
     # for non-statefulset deployments, pv & pvc need to be RWX for rolling update to complete
     - ReadWriteMany
-  volumeName: cephfs-wpbrooke-wordpress-wpfiles
+  volumeName: cephfs-wparctic-wordpress-wpfiles
   resources:
     requests:
       storage: 100Gi

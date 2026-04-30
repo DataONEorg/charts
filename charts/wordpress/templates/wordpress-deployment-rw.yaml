@@ -1,3 +1,8 @@
+{{/*
+Creates the Deployment for the single read/write (rw) WordPress pod.
+Allows editing of themes/plugins from the WordPress admin interface.
+WordPress version upgrades are disallowed from the admin UI; upgrade via helm.
+*/}}
 {{- include "wparctic.wordpressDeployment" (dict
   "Values" .Values
   "Release" .Release

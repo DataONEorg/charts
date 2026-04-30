@@ -1,3 +1,10 @@
+{{/*
+Creates the Deployment for the 0..n read-only (ro) WordPress pod(s).
+Disallows editing of themes/plugins from the WordPress admin interface.
+WordPress version upgrades are disallowed from the admin UI; upgrade via helm.
+If replicaCount is 1, no RO deployment is rendered.
+If replicaCount is 2+, RO replicas are replicaCount - 1.
+*/}}
 {{- $roReplicas := max (sub (int .Values.replicaCount) 1) 0 -}}
 {{- if gt $roReplicas 0 }}
 {{- include "wparctic.wordpressDeployment" (dict
@@ -6,7 +13,7 @@
   "Chart" .Chart
   "replicas" $roReplicas
   "role" "ro"
-  "readOnlyVolume" true
+  "readOnlyVolume" false
   "disallowFileMods" true
 ) }}
 {{- end }}

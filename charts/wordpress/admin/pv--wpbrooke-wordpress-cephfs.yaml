@@ -3,7 +3,7 @@ kind: PersistentVolume
 metadata:
   # See https://github.com/DataONEorg/k8s-cluster/blob/main/storage/storage.md#dataone-volume-naming-conventions
   # cephs-{release}-{function}-{instance}, where {release} usually = {namespace}
-  name: &pv-name cephfs-wpbrooke-wordpress-wpfiles
+  name: &pv-name cephfs-wparctic-wordpress-wpfiles
   labels:
     velero.io/exclude-from-backup: "true"
 spec:

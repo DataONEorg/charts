@@ -9,7 +9,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wparctic-wordpress-mariadbd-0
-  namespace: brooke
+  namespace: arctic
   labels:
     velero.io/exclude-from-backup: "true"
 spec:
