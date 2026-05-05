@@ -3,29 +3,14 @@
 > [!NOTE]
 > This chart is intended to be a simple, maintainable solution for deploying the arcticdata.io and test.arcticdata.io WordPress sites. It therefore contains some hard-coded values by design, and is not intended to be a generic chart that is re-usable in other contexts (but can be used as a starting point if needed).
 
-## Deployment Notes
-
-If you are running only ONE WP pod (`replicaCount: 1`), ensure that:
-- `ingress.host` and `adminIngress.host` are set to the same domain
-- `podDisruptionBudget.enabled` is set to `false`
-
-If you are running 2 OR MORE WP pods (`replicaCount` >1), ensure that:
-- `ingress.host` and `adminIngress.host` are set to DIFFERENT domains, to avoid issues when editing Themes in Preview Mode
-- `podDisruptionBudget.enabled` is set to `true`
-
-If you don't want the default `Akismet` and `Hello Dolly` plugins to reappear after every new helm deployment, do this on the mounted `wp-content` volume:
-
-```shell
-sudo chown -R root:root akismet hello.php
-sudo chmod -R 600 akismet hello.php
-```
-
 
 ## Upgrade policy
 
-The admin UI will show a warning if the WordPress version is out of date. WordPress core updates are disabled in the UI (manual and automatic). Upgrade WordPress and MariaDB only by changing image versions in `values*.yaml` and running `helm upgrade`.
+- The admin UI will show a warning if the WordPress version is out of date.
+- WordPress core updates are disabled in the UI (manual and automatic).
+- Upgrade WordPress and MariaDB only by changing image versions in values overrides (`wordpress.image.tag` and/or `mariadb.image.tag`) and running `helm upgrade`.
+- Plugin updates and Theme editing can be done in the WordPress admin UI.
 
-Plugin updates and Theme editing can be done in the WordPress admin UI.
 
 ## Find latest image versions
 
@@ -39,12 +24,30 @@ Plugin updates and Theme editing can be done in the WordPress admin UI.
   - image tags: https://hub.docker.com/_/mariadb?tab=tags
   - upgrade notes (major/minor specifics): https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/upgrading/upgrading-from-to-specific-versions
 
+
+## Deployment Notes
+
+1. If you are running only ONE WP pod (`replicaCount: 1`), ensure that:
+- `ingress.host` and `adminIngress.host` are set to the same domain
+- `podDisruptionBudget.enabled` is set to `false`
+
+2. If you are running 2 OR MORE WP pods (`replicaCount` >1), ensure that:
+- `ingress.host` and `adminIngress.host` are set to DIFFERENT domains, to avoid issues when editing Themes in Preview Mode
+- `podDisruptionBudget.enabled` is set to `true`
+
+3. The chart automatically deletes the default `Akismet` and `Hello Dolly` plugins, and themes named "twentytwenty*", so they don't keep reappearing after every new helm deployment. Override `wordpress.postStart` if you don't want those to be deleted.
+
+
 ## Upgrade steps
 
 1. Take manual backups before upgrade (`wp-content` & DB; see below).
 2. Edit image tags in your values file(s):
    - `wordpress.image.tag`
    - `mariadb.image.tag`
+
+> [!CAUTION]
+> Your WP site may experience downtime when upgrading MariaDB, since the image automatically runs `mariadb_upgrade` on startup, which may take a few minutes to complete!
+
 3. Run Helm upgrade:
 
     ```shell
