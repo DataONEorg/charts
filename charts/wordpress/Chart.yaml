@@ -1,6 +1,27 @@
 apiVersion: v2
-name: adc-wordpress-stack
-description: Helm chart for WordPress + in-cluster MariaDB for arcticdata.io
+name: "dataone-wordpress-stack"
+description: |
+  Helm chart for WordPress + in-cluster MariaDB
+  https://github.com/DataONEorg/charts/tree/main/charts/wordpress
+
+# OCI Annotations - see https://github.com/helm/helm/pull/11204
+sources:
+  - https://github.com/DataONEorg/charts
+
+home: https://github.com/DataONEorg/charts/tree/main/charts/wordpress
+
 type: application
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
 version: 0.1.0
-appVersion: "6.8.2"
+
+# This is typically the version number of the application being deployed. However, we want to be
+# able to upgrade WordPress frequently to keep up with security patches, without needing to
+# publish a new chart version each time. The WordPress and MariaDB image tags are therefore defined
+# in values overrides, rather than here in Chart.yaml.
+#
+# IMPORTANT: this means that the user is responsible for ensuring the WordPress and MariaDB
+# versions are compatible, and for addressing any potential upgrade issues. Check the WordPress and
+# MariaDB release notes for any breaking changes before upgrading. (See links in README.md)
+appVersion: "SEE--.Values.wordpress.image.tag"

@@ -5,6 +5,8 @@ podDisruptionBudget:
   enabled: true
 
 wordpress:
+  image:
+    tag: "6.8.2-php8.2-apache"
   existingSecret: wparctic-wordpress
   persistence:
     existingClaim: wparctic-wordpress-0
@@ -17,6 +19,8 @@ wordpress:
       memory: 1Gi
 
 mariadb:
+  image:
+    tag: "11.4"
   existingSecret: wparctic-mariadb
   persistence:
     existingClaim: wparctic-wordpress-mariadbd-0

@@ -13,6 +13,14 @@ If you are running 2 OR MORE WP pods (`replicaCount` >1), ensure that:
 - `ingress.host` and `adminIngress.host` are set to DIFFERENT domains, to avoid issues when editing Themes in Preview Mode
 - `podDisruptionBudget.enabled` is set to `true`
 
+If you don't want the default `Akismet` and `Hello Dolly` plugins to reappear after every new helm deployment, do this on the mounted `wp-content` volume:
+
+```shell
+sudo chown -R root:root akismet hello.php
+sudo chmod -R 600 akismet hello.php
+```
+
+
 ## Upgrade policy
 
 The admin UI will show a warning if the WordPress version is out of date. WordPress core updates are disabled in the UI (manual and automatic). Upgrade WordPress and MariaDB only by changing image versions in `values*.yaml` and running `helm upgrade`.
