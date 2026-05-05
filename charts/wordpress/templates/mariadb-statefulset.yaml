@@ -69,7 +69,9 @@ spec:
           volumeMounts:
             - name: mariadb-data
               mountPath: /var/lib/mysql
+              {{- if .Values.mariadb.persistence.subPath }}
               subPath: {{ .Values.mariadb.persistence.subPath }}
+              {{- end }}
       volumes:
         - name: mariadb-data
           persistentVolumeClaim:

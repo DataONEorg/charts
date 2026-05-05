@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 3
 ## if replicaCount < 2, set podDisruptionBudget.enabled to false, to avoid eviction issues
 ## Otherwise, set to true
 podDisruptionBudget:
@@ -24,6 +24,26 @@ wordpress:
       memory: 4Gi
   service:
     port: 80
+  ## Remove the default Akismet and Hello Dolly plugins that come with the official WordPress image,
+  ## since they are copied from the template on every new helm deployment
+  ##
+  postStart:
+    exec:
+      command:
+        - /bin/sh
+        - -ec
+        - |-
+          for i in $(seq 1 20); do
+          # postStart has no ordering guarantee relative to the container entrypoint work.
+          # Official wordpress image startup does a copy from /usr/src/wordpress
+          # into /var/www/html (including default plugins), so we may need to wait for that
+          # to complete before we can remove the default plugins.
+          rm -rf /var/www/html/wp-content/plugins/akismet /var/www/html/wp-content/plugins/hello.php || true
+          [ ! -e /var/www/html/wp-content/plugins/akismet ] && \
+          [ ! -e /var/www/html/wp-content/plugins/hello.php ] && break
+          sleep 1
+          done
+          exit 0
 
 mariadb:
   autoUpgrade: true
@@ -57,6 +77,8 @@ robotsTxt:
 ingress:
   enabled: true
   className: nginx
+  ## @param ingress.host The domain name of the main public WordPress site (e.g. "arcticdata.io")
+  ##
   host: localhost
   tlsSecretName: ingress-nginx-tls-cert
   pathType: Prefix
@@ -106,6 +128,12 @@ ingress:
 adminIngress:
   enabled: true
   className: nginx
+  ## @param adminIngress.host The domain name of the WordPress Admin site (eg: "wp-admin.arcticdata.io")
+  ## IMPORTANT:
+  ## If you are running only ONE WP pod (replicaCount: 1) this must be the same as ingress.host
+  ## If you are running 2 OR MORE WP pods (replicaCount: 2 or more), use a DIFFERENT domain to avoid
+  ## issues when editing Themes in Preview Mode
+  ##
   host: localhost
   tlsSecretName: ingress-nginx-tls-cert
   pathType: Prefix

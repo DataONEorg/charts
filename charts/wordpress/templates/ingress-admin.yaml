@@ -11,11 +11,31 @@ metadata:
 spec:
   ingressClassName: {{ .Values.adminIngress.className }}
   rules:
+    # Admin host: send everything to RW (admin + preview).
     - host: {{ .Values.adminIngress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "wparctic.wordpressName" . }}-rw
+                port:
+                  name: http
+    {{- if ne .Values.adminIngress.host .Values.ingress.host }}
+    # Public host: only admin-related paths go to RW.
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
           - path: {{ .Values.adminIngress.path }}
             pathType: {{ .Values.adminIngress.pathType }}
+            backend:
+              service:
+                name: {{ include "wparctic.wordpressName" . }}-rw
+                port:
+                  name: http
+          - path: /wp-json
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "wparctic.wordpressName" . }}-rw
@@ -30,6 +50,7 @@ spec:
                 port:
                   name: http
           {{- end }}
+    {{- end }}
   tls:
     - hosts:
         - {{ .Values.adminIngress.host }}

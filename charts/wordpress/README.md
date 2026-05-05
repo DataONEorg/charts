@@ -75,6 +75,10 @@ Safest rollback sequence:
     # you will be prompted for the password (from the secret)
     # NOTE it's arcticadata and arcticadata_wp, not arcticdata/arcticdata_wp!
     ```
+> [!IMPORTANT]
+> If you are restoring DB files from another instance (e.g. copy from prod to test) instead of using a dump file:
+> 1. Make sure the entire directory is owned by UID `999` (the mysql user in the MariaDB container)
+> 2. Delete the `tc.log` file in the `mariadb/data` directory if you see errors about recovery failure and tc log during startup.
 
 2. (If necessary) Restore `wp-content` from pre-upgrade backup/snapshot.
 
@@ -86,6 +90,9 @@ Safest rollback sequence:
               /mnt/ceph/repos/arctic/wordpress/wp-files/wordpress/wp-content
     ```
 
+> [!IMPORTANT]
+> If you are restoring DB files from another instance (e.g. copy from prod to test), make sure the entire directory is owned by UID `33` (the www-data user in the WordPress container)
+
 3. Roll back chart/image versions with `helm rollback`:
 
 ```shell
@@ -95,6 +102,8 @@ helm rollback <release> <target-revision>
 ```
 
 ## Troubleshooting
+
+### WordPress
 
 If you see this in WP admin during update operations:
 
@@ -113,3 +122,21 @@ mariadb -u arcticadata -p arcticadata_wp \
 # you will be prompted for the password (from the secret)
 # NOTE it's arcticadata and arcticadata_wp, not arcticdata/arcticdata_wp!
 ```
+
+### MariaDB
+
+If you see this in the MariaDB logs during startup, after copying DB files from another instance:
+
+```shell
+2026-05-04 21:20:28 0 [Note] Plugin 'FEEDBACK' is disabled.
+2026-05-04 21:20:28 0 [Note] Plugin 'wsrep-provider' is disabled.
+2026-05-04 21:20:28 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2026-05-04 21:20:28 0 [Note] Recovering after a crash using tc.log
+2026-05-04 21:20:28 0 [ERROR] Recovery failed! You must enable all engines that were enabled at the moment of the crash
+1 2026-05-0421:20:20Orashrecovery failed. Either correct the problem fits, for examples out of memory error and restart, or delete to log and start l
+erver with --tc-heuristic-recover={commit rollback}
+2026-05-04 21:20:28 0 [ERROR] Can't init tc log
+2026-05-04 21:20:28 0 [ERROR]
+```
+
+Simply delete the `mariadb/data/tc.log` file and restart the pod

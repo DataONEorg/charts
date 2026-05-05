@@ -52,8 +52,15 @@ spec:
                   key: {{ .Values.mariadb.auth.passwordSecretKey }}
             - name: WORDPRESS_CONFIG_EXTRA
               value: |
-                define('WP_HOME', 'https://{{ .Values.ingress.host }}');
-                define('WP_SITEURL', 'https://{{ .Values.ingress.host }}');
+                $wparctic_public_host = '{{ .Values.ingress.host }}';
+                $wparctic_admin_host = '{{ if and .Values.adminIngress.enabled .Values.adminIngress.host }}{{ .Values.adminIngress.host }}{{ else }}{{ .Values.ingress.host }}{{ end }}';
+                {{- if eq .role "rw" }}
+                define('WP_HOME', 'https://' . $wparctic_admin_host);
+                define('WP_SITEURL', 'https://' . $wparctic_admin_host);
+                {{- else }}
+                define('WP_HOME', 'https://' . $wparctic_public_host);
+                define('WP_SITEURL', 'https://' . $wparctic_public_host);
+                {{- end }}
                 define( 'FORCE_SSL_ADMIN', true );
                 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) $_SERVER['HTTPS'] = 'on';
                 define('WP_AUTO_UPDATE_CORE', false);
@@ -71,6 +78,8 @@ spec:
                 }
                 {{- if .disallowFileMods }}
                 define('DISALLOW_FILE_MODS', true);
+                {{- else }}
+                define('FS_METHOD', 'direct');
                 {{- end }}
           readinessProbe:
             httpGet:
@@ -86,6 +95,11 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 20
             timeoutSeconds: 5
+          {{- with .Values.wordpress.postStart }}
+          lifecycle:
+            postStart:
+          {{ toYaml . | nindent 14 }}
+          {{- end }}
           resources:
             {{ toYaml .Values.wordpress.resources | nindent 12 }}
           volumeMounts:

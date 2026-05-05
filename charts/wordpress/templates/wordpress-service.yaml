@@ -9,6 +9,7 @@ spec:
   selector:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: wordpress
+    app.kubernetes.io/role: {{ if gt (int .Values.replicaCount) 1 }}ro{{ else }}rw{{ end }}
   ports:
     - name: http
       port: 80

@@ -20,6 +20,7 @@ mariadb:
   existingSecret: wparctic-mariadb
   persistence:
     existingClaim: wparctic-wordpress-mariadbd-0
+    subPath: data
   resources:
     requests:
       cpu: "250m"
@@ -29,7 +30,15 @@ mariadb:
       memory: 1Gi
 
 ingress:
-  host: &hostname wp-dev.test.dataone.org
+  ## @param ingress.host The domain name of the main public WordPress site (e.g. "arcticdata.io")
+  ##
+  host: wp-dev.test.dataone.org
 
 adminIngress:
-  host: *hostname
+  ## @param adminIngress.host The domain name of the WordPress Admin site (eg: "wp-admin.arcticdata.io")
+  ## IMPORTANT:
+  ## If you are running only ONE WP pod (replicaCount: 1) this must be the same as ingress.host
+  ## If you are running 2 OR MORE WP pods (replicaCount: 2 or more), use a DIFFERENT domain to avoid
+  ## issues when editing Themes in Preview Mode
+  ##
+  host: wp-dev-admin.test.dataone.org
