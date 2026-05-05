@@ -24,6 +24,29 @@ wordpress:
       memory: 4Gi
   service:
     port: 80
+  ## postStart command to remove the default Akismet and Hello Dolly plugins and default themes that
+  ## that come with the official WordPress image, since they are copied from the template on every
+  ## new helm deployment
+  ##
+  postStart:
+    exec:
+      command:
+        - /bin/sh
+        - -ec
+        - |-
+          for i in $(seq 1 20); do
+          rm -rf /var/www/html/wp-content/plugins/akismet \
+          /var/www/html/wp-content/plugins/hello.php \
+          /var/www/html/wp-content/themes/twentytwenty* || true
+          # postStart has no ordering guarantee relative to the container entrypoint work.
+          # Official wordpress image startup does a copy from /usr/src/wordpress
+          # into /var/www/html (including default plugins), so we may need to wait for that
+          # to complete before we can remove the default plugins.
+          [ ! -e /var/www/html/wp-content/plugins/akismet ] && \
+          [ ! -e /var/www/html/wp-content/plugins/hello.php ] && break
+          sleep 1
+          done
+          exit 0
 
 mariadb:
   autoUpgrade: true
