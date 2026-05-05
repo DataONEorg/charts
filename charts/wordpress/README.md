@@ -3,9 +3,21 @@
 > [!NOTE]
 > This chart is intended to be a simple, maintainable solution for deploying the arcticdata.io and test.arcticdata.io WordPress sites. It therefore contains some hard-coded values by design, and is not intended to be a generic chart that is re-usable in other contexts (but can be used as a starting point if needed).
 
+## Deployment Notes
+
+If you are running only ONE WP pod (`replicaCount: 1`), ensure that:
+- `ingress.host` and `adminIngress.host` are set to the same domain
+- `podDisruptionBudget.enabled` is set to `false`
+
+If you are running 2 OR MORE WP pods (`replicaCount` >1), ensure that:
+- `ingress.host` and `adminIngress.host` are set to DIFFERENT domains, to avoid issues when editing Themes in Preview Mode
+- `podDisruptionBudget.enabled` is set to `true`
+
 ## Upgrade policy
 
-WordPress core updates are disabled in the UI (manual and automatic). Upgrade WordPress and MariaDB only by changing image versions in `values*.yaml` and running `helm upgrade`.
+The admin UI will show a warning if the WordPress version is out of date. WordPress core updates are disabled in the UI (manual and automatic). Upgrade WordPress and MariaDB only by changing image versions in `values*.yaml` and running `helm upgrade`.
+
+Plugin updates and Theme editing can be done in the WordPress admin UI.
 
 ## Find latest image versions
 
@@ -91,7 +103,7 @@ Safest rollback sequence:
     ```
 
 > [!IMPORTANT]
-> If you are restoring DB files from another instance (e.g. copy from prod to test), make sure the entire directory is owned by UID `33` (the www-data user in the WordPress container)
+> If you are restoring wp-content files from another instance (e.g. copy from prod to test), make sure the entire directory is owned by UID `33` (the www-data user in the WordPress container)
 
 3. Roll back chart/image versions with `helm rollback`:
 
