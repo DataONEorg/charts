@@ -34,18 +34,15 @@ wordpress:
         - /bin/sh
         - -ec
         - |-
-          for i in $(seq 1 20); do
-          rm -rf /var/www/html/wp-content/plugins/akismet \
-          /var/www/html/wp-content/plugins/hello.php \
-          /var/www/html/wp-content/themes/twentytwenty* || true
-          # postStart has no ordering guarantee relative to the container entrypoint work.
-          # Official wordpress image startup does a copy from /usr/src/wordpress
-          # into /var/www/html (including default plugins), so we may need to wait for that
-          # to complete before we can remove the default plugins.
-          [ ! -e /var/www/html/wp-content/plugins/akismet ] && \
-          [ ! -e /var/www/html/wp-content/plugins/hello.php ] && break
-          sleep 1
-          done
+          # Entry-point copy and postStart have no strict ordering; keep pruning for a short window.
+          (
+            for i in $(seq 1 30); do
+              rm -rf /var/www/html/wp-content/plugins/akismet \
+                /var/www/html/wp-content/plugins/hello.php \
+                /var/www/html/wp-content/themes/twentytwenty* || true
+              sleep 1
+            done
+          ) &
           exit 0
 
 mariadb:
@@ -144,9 +141,6 @@ adminIngress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "85m"
-#    nginx.ingress.kubernetes.io/auth-type: basic
-#    nginx.ingress.kubernetes.io/auth-secret: wparctic-basic-auth
-#    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - admin"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       # Normalize admin URL without a trailing slash before proxying to WordPress.
       if ($request_uri = "/wp-admin") {
@@ -171,10 +165,7 @@ adminIngress:
     - path: /wp-admin/admin-ajax.php
       pathType: Exact
 
-podSecurityContext:
-#  runAsUser: 1001
-#  fsGroup: 1001
-#  fsGroupChangePolicy: OnRootMismatch
+podSecurityContext: {}
 nameOverride: ""
 fullnameOverride: ""
 imagePullSecrets: []
