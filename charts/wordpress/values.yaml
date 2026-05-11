@@ -82,7 +82,7 @@ ingress:
   host: localhost
   ## @param ingress.tlsSecretName secret for main public site. Matches ADC site TLS secret name
   ##
-  tlsSecretName: ingress-nginx-tls-cert
+  tlsSecretName: ingress-wp-tls-cert
   pathType: Prefix
   path: /
   annotations:
@@ -139,7 +139,7 @@ adminIngress:
   host: localhost
   ## @param adminIngress.tlsSecretName secret for admin url. DIFFERENT from ADC site TLS secret name
   ##
-  tlsSecretName: ingress-admin-tls-cert
+  tlsSecretName: ingress-wpadmin-tls-cert
   pathType: Prefix
   path: /wp-admin
   annotations:

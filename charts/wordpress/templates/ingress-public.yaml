@@ -14,6 +14,31 @@ spec:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
+          {{- if .Values.adminIngress.enabled }}
+          - path: {{ .Values.adminIngress.path }}
+            pathType: {{ .Values.adminIngress.pathType }}
+            backend:
+              service:
+                name: {{ include "wparctic.wordpressName" . }}-rw
+                port:
+                  name: http
+          - path: /wp-json
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "wparctic.wordpressName" . }}-rw
+                port:
+                  name: http
+          {{- range .Values.adminIngress.extraPaths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "wparctic.wordpressName" $ }}-rw
+                port:
+                  name: http
+          {{- end }}
+          {{- end }}
           - path: {{ .Values.ingress.path }}
             pathType: {{ .Values.ingress.pathType }}
             backend:
