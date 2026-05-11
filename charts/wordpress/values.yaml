@@ -80,6 +80,8 @@ ingress:
   ## @param ingress.host The domain name of the main public WordPress site (e.g. "arcticdata.io")
   ##
   host: localhost
+  ## @param ingress.tlsSecretName secret for main public site. Matches ADC site TLS secret name
+  ##
   tlsSecretName: ingress-nginx-tls-cert
   pathType: Prefix
   path: /
@@ -135,7 +137,9 @@ adminIngress:
   ## issues when editing Themes in Preview Mode
   ##
   host: localhost
-  tlsSecretName: ingress-nginx-tls-cert
+  ## @param adminIngress.tlsSecretName secret for admin url. DIFFERENT from ADC site TLS secret name
+  ##
+  tlsSecretName: ingress-admin-tls-cert
   pathType: Prefix
   path: /wp-admin
   annotations:
