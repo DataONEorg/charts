@@ -1,0 +1,25 @@
+# Creates a persistent volume claim for use by the static data service
+#
+# This should be done only one time, separately from the helm install/upgrade cycle
+#
+# NOTE: ensure that a PersistentVolume has already been created before creating
+#       the PersistentVolumeClaim!
+#
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metacatbrooke-datasvc-0
+  namespace: brooke
+  labels:
+    velero.io/exclude-from-backup: "true"
+spec:
+  accessModes:
+    - ReadOnlyMany
+  volumeName: cephfs-metacatbrooke-datasvc-data
+  resources:
+    requests:
+      ## For read-only volumes, the storage size in PV/PVC does not limit your application's ability
+      ## to read data, even if the underlying CephFS volume grows beyond the declared size. The limit
+      ## is meaningful only for write operations
+      storage: 100Gi
+  storageClassName: csi-cephfs-sc

@@ -1,0 +1,43 @@
+## override values.yaml for bitnami nginx instance to serve static files from knb.ecoinformatics.org/data
+##
+## As prod-knb:
+##  $  helm upgrade --install datasvcknb -n knb bitnami/apache
+##                  -f values-prod-cluster-apache-datasvc-knb.yaml --version [VERSION] \
+##                  --debug
+##
+
+## Available image versions: https://hub.docker.com/hardened-images/catalog/dhi/httpd/images
+##
+image:
+#  tag: "2.4.67-debian13"
+  tag: "2.4.67-debian13-dev"  # do not use dev image for production deployments!
+  imagePullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 4
+    memory: 28Gi
+  limits:
+    cpu: 16
+    memory: 132Gi
+
+extraVolumes:
+  - name: static-files-vol
+    persistentVolumeClaim:
+      claimName: metacatknb-datasvc-0
+      readOnly: true
+
+ingress:
+  ## @param ingress.hostname Default host for the ingress resource
+  ##
+  hostname: knb.test.dataone.org
+#  hostname: knb.ecoinformatics.org
+
+  ## @param ingress.path The URL Path of the root data directory.
+  ##
+  path: /data/
+
+#  tls:
+#    - hosts:
+#        - *ingressHostname
+#      secretName: ingress-datasvc-tls-cert

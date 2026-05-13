@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "apache-datasvc.fullname" . }}
+  labels:
+    {{- include "apache-datasvc.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "apache-datasvc.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "apache-datasvc.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.containerSecurityContext | nindent 8 }}
+      containers:
+        - name: apache
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsUser: {{ .Values.containerSecurityContext.runAsUser }}
+            runAsGroup: {{ .Values.containerSecurityContext.runAsGroup }}
+          command:
+            - httpd
+            - -DFOREGROUND
+            - -C
+            - IncludeOptional conf/vhosts/*.conf
+            - -f
+            - /usr/local/apache2/conf/httpd.conf
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: vhosts-config
+              mountPath: /usr/local/apache2/conf/vhosts
+              readOnly: true
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+      volumes:
+        - name: vhosts-config
+          configMap:
+            {{- if .Values.vhostsConfigMap }}
+            name: {{ .Values.vhostsConfigMap }}
+            {{- else }}
+            name: {{ include "apache-datasvc.fullname" . }}-vhost
+            {{- end }}
+        {{- toYaml .Values.extraVolumes | nindent 8 }}

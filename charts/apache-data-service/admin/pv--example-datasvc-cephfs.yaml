@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: &pv-name cephfs-metacatbrooke-datasvc-data
+  labels:
+    velero.io/exclude-from-backup: "true"
+spec:
+  accessModes:
+  - ReadOnlyMany
+  capacity:
+    ## For read-only volumes, the storage size in PV/PVC does not limit your application's ability
+    ## to read data, even if the underlying CephFS volume grows beyond the declared size. The limit
+    ## is meaningful only for write operations
+    storage: 100Gi
+  csi:
+    driver: cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      # node stage secret name
+      name: csi-cephfs-prod-data-pdg-subvol
+      # node stage secret namespace where above secret is created
+      namespace: ceph-csi-cephfs
+    volumeAttributes:
+      clusterID: 8aa4d4a0-a209-11ea-baf5-ffc787bfc812
+      fsName: cephfs
+      rootPath: /volumes/pdg-subvol-group/pdg-subvol/a5c90f20-f824-4ce9-b175-6685d7846520/repos/YOUR-REPO/files
+      staticVolume: "true"
+    volumeHandle: *pv-name
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: csi-cephfs-sc
+  volumeMode: Filesystem

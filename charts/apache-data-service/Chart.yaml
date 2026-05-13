@@ -1,0 +1,28 @@
+apiVersion: v2
+name: apache-data-svc
+description: |
+  Minimal chart for KNB data-service Apache using Docker Hardened Image
+  https://github.com/DataONEorg/charts/tree/main/charts/apache-data-service
+
+# OCI Annotations - see https://github.com/helm/helm/pull/11204
+sources:
+  - https://github.com/DataONEorg/charts
+
+home: https://github.com/DataONEorg/charts/tree/main/charts/apache-data-service
+
+type: application
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 1.0.0
+
+# This is typically the version number of the application being deployed. However, we want to be
+# able to upgrade frequently to keep up with security patches, without needing to publish a new
+# chart version each time. The Apache httpd image tag is therefore defined in values overrides,
+# rather than here in Chart.yaml.
+#
+# IMPORTANT: this means that the user is responsible for addressing any potential upgrade issues.
+# Check the apache httpd release notes for any breaking changes before upgrading, and test first
+# in dev. (See links in README.md)
+#
+appVersion: "SEE_.Values.image.tag"

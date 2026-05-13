@@ -1,0 +1,140 @@
+## override values.yaml for bitnami nginx instance to serve static files from knb.ecoinformatics.org/data
+##
+## As prod-knb:
+##  $  helm upgrade --install datasvcknb -n knb bitnami/apache
+##                  -f values-prod-cluster-apache-datasvc-knb.yaml --version [VERSION] \
+##                  --debug
+##
+
+## Available image versions: https://hub.docker.com/hardened-images/catalog/dhi/httpd/images
+##
+image:
+  repository: dhi.io/httpd
+  tag: "OVERRIDE-BY-USER-REQUIRED"
+  imagePullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: dhi-pull-secret
+
+podSecurityContext:
+  fsGroupChangePolicy: OnRootMismatch
+
+## must not match user or group in /var/data - want to browse as "other"
+containerSecurityContext:
+#  runAsUser: 1001
+#  fsGroup: 1001
+  fsGroupChangePolicy: OnRootMismatch
+
+
+## @param resources Resource requests and limits for the Apache container. Adjust as needed based on
+## expected load and performance requirements. Note that these are just example values and will
+## need to be tuned for your specific use case.
+##
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 4
+    memory: 8Gi
+
+extraVolumes:
+  - name: static-files-vol
+    persistentVolumeClaim:
+      claimName: REQUIRED-PVC-NAME-HERE
+      readOnly: true
+
+extraVolumeMounts:
+  - name: static-files-vol
+    mountPath: /var/files
+    subPath: ""
+
+## @param vhostsConfigMap Name of config map used to overridde virtual hosts content. If blank,
+## defaults to using configmap-vhost.yaml in this chart.
+##
+vhostsConfigMap: ""
+
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+
+  ## @param ingress.pathType Ingress path type
+  ##
+  pathType: Prefix
+
+  ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
+  ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
+  ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
+  ##
+  ingressClassName: nginx
+
+  ## @param ingress.hostname Default host for the ingress resource (REQUIRED)
+  ##
+  hostname: localhost
+
+  ## @param ingress.path The main URI Path.
+  ##
+  path: /data/
+
+  ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
+  ## For a full list of possible ingress annotations, please see
+  ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+  ## Use this parameter to set the required annotations for cert-manager, see
+  ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
+  ##
+  ## e.g:
+  ## annotations:
+  ##   kubernetes.io/ingress.class: nginx
+  ##   cert-manager.io/cluster-issuer: cluster-issuer-name
+  ##
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      # Cors Setup
+
+      set $cors 'true';
+
+      if ($request_method = 'OPTIONS') {
+        set $cors ${cors}options;
+      }
+
+      if ($cors = "true") {
+        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
+        more_set_headers 'Access-Control-Allow-Credentials: true';
+        more_set_headers 'Access-Control-Allow-Methods: POST, PUT, GET, OPTIONS';
+        more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+
+        more_set_headers 'Access-Control-Max-Age: 1728000';
+      }
+
+      if ($cors = "trueoptions") {
+        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
+        more_set_headers 'Access-Control-Allow-Credentials: true';
+        more_set_headers 'Access-Control-Allow-Methods: POST, PUT, GET, OPTIONS';
+        more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+
+        more_set_headers 'Access-Control-Max-Age: 1728000';
+        more_set_headers 'Content-Type: text/plain charset=UTF-8';
+        more_set_headers 'Content-Length: 0';
+        return 204;
+      }
+
+  tlsWwwPrefix: true
+  tls: []
+
+  ## @param ingress.extraPaths An array with additional arbitrary paths & pathTypes to add
+  ## Don't define backend; this is auto-populated to point to the apache service
+  ## e.g:
+  ## extraPaths:
+  ##   - path: /software/dist/
+  ##     pathType: Prefix
+  ##   - path: /icons/
+  ##     pathType: Prefix
+  ##
+  extraPaths:
+    - path: /software/dist/
+      pathType: Prefix
+    - path: /icons/
+      pathType: Prefix
