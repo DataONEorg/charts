@@ -51,7 +51,8 @@
 3. Run Helm upgrade:
 
     ```shell
-    helm upgrade --install wparctic ./charts/wordpress -n arctic -f <values-overrides-file>.yaml
+    helm upgrade --install wparctic oci://ghcr.io/dataoneorg/charts/dataone-wordpress-stack \
+        -f <values-overrides-file>.yaml -n arctic
     ```
 
 ## Manual Backups Before Upgrade
