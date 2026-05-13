@@ -28,6 +28,6 @@ kubectl create secret docker-registry dhi-pull-secret \
 ## Deploy
 
 ```shell
-helm upgrade --install datasvcbrooke oci://ghcr.io/dataoneorg/charts/dataone-wordpress-stack \
+helm upgrade --install datasvcbrooke oci://ghcr.io/dataoneorg/charts/dataone-apache-data-svc \
     -f values-prod-cluster-example.yaml -n brooke
 ```

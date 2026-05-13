@@ -1,5 +1,5 @@
 apiVersion: v2
-name: apache-data-svc
+name: dataone-apache-data-svc
 description: |
   Minimal chart for KNB data-service Apache using Docker Hardened Image
   https://github.com/DataONEorg/charts/tree/main/charts/apache-data-service
