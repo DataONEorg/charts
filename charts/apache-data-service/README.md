@@ -5,6 +5,16 @@
 
 Minimal chart to deploy Apache using Docker Hardened Image - see https://hub.docker.com/hardened-images/catalog/dhi/httpd
 
+## Upgrade policy
+
+> [!IMPORTANT]
+> After upgrading, ALWAYS update the CHANGELOG.md file in our private GitHub Enterprise `k8s-cluster-config` repo!
+
+- To upgrade, simply change the image version manually and run `helm upgrade` when a new version of the 3rd party software is released.
+- Avoid using "`latest`" tags, to avoid unexpected breaking changes when new versions are released!
+- Check the [official image tags](https://hub.docker.com/hardened-images/catalog/dhi/httpd/images) and [release/upgrade notes](https://httpd.apache.org/docs/current/upgrading.html), for any specific upgrade gotchas.
+- Always test upgrades on the dev cluster before deploying to production, to catch any potential issues with the new version.
+
 ## Create PV & PVC
 
 Inspect and edit admin/pv--example-datasvc-cephfs.yaml and pvc--example-datasvc.yaml as needed to point at the data files you want to serve, then apply to create the PV and PVC to be mounted by apache
@@ -31,3 +41,27 @@ kubectl create secret docker-registry dhi-pull-secret \
 helm upgrade --install datasvcbrooke oci://ghcr.io/dataoneorg/charts/dataone-apache-data-svc \
     -f values-prod-cluster-example.yaml -n brooke
 ```
+
+## Troubleshooting
+
+Docker Hardened Images do not include a shell, so you cannot exec into the pod to troubleshoot. 
+
+However, there should be a "dev" version of the image available that includes a shell, which you can use to troubleshoot by changing the image tag in the deployment to the "dev" version, and redeploying. For example, if the current image tag is `2.4.67-debian13`, the dev version would be `2.4.67-debian13-dev` (check [tags on dockerhub](https://hub.docker.com/hardened-images/catalog/dhi/httpd/images) to confirm).
+
+```yaml
+image:
+  # Example hardened image for production deployments
+  #
+  #  tag: "2.4.67-debian13"
+
+  # Example dev image for debugging
+  # DO NOT USE FOR PRODUCTION DEPLOYMENTS!
+  #
+  tag: "2.4.67-debian13-dev"
+```
+
+You can also check the logs for the apache container(s) to see any error messages:
+
+```shell
+kubectl logs -n brooke -l app.kubernetes.io/name=apache-data-svc -c apache
+``` 
