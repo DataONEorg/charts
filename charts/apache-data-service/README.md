@@ -1,9 +1,9 @@
 # Apache Data Service Helm chart
 
+Minimal chart to deploy Apache using a [Docker Hardened Image](https://hub.docker.com/hardened-images/catalog/dhi/httpd). The service deployed by this chart is responsible for serving up static content from a mounted ceph subvolume, and making it accessible at a specified URL (e.g. the data files at https://arcticdata.io/data).
+
 > [!NOTE]
 > This chart is intended to be a simple, maintainable solution for serving static files at <hostname>/data for sites like arcticdata.io, test.arcticdata.io and knb.ecoinformatics.org. It therefore contains some hard-coded values by design, and is not intended to be a generic chart that is re-usable in other contexts (but can be used as a starting point if needed).
-
-Minimal chart to deploy Apache using Docker Hardened Image - see https://hub.docker.com/hardened-images/catalog/dhi/httpd
 
 ## Upgrade policy
 
@@ -39,7 +39,7 @@ kubectl create secret docker-registry dhi-pull-secret \
 
 ```shell
 helm upgrade --install datasvcbrooke oci://ghcr.io/dataoneorg/charts/dataone-apache-data-svc \
-    -f values-prod-cluster-example.yaml -n brooke
+    -f <my-values-overrides-yaml> -n brooke
 ```
 
 ## Troubleshooting

@@ -19,12 +19,8 @@ imagePullSecrets:
 podSecurityContext:
   fsGroupChangePolicy: OnRootMismatch
 
-## must not match user or group in /var/data - want to browse as "other"
 containerSecurityContext:
-#  runAsUser: 1001
-#  fsGroup: 1001
   fsGroupChangePolicy: OnRootMismatch
-
 
 ## @param resources Resource requests and limits for the Apache container. Adjust as needed based on
 ## expected load and performance requirements. Note that these are just example values and will
@@ -35,7 +31,7 @@ resources:
     cpu: 500m
     memory: 1Gi
   limits:
-    cpu: 4
+    cpu: 2
     memory: 8Gi
 
 extraVolumes:
@@ -49,7 +45,7 @@ extraVolumeMounts:
     mountPath: /var/files
     subPath: ""
 
-## @param vhostsConfigMap Name of config map used to overridde virtual hosts content. If blank,
+## @param vhostsConfigMap Name of config map used to override virtual hosts content. If blank,
 ## defaults to using configmap-vhost.yaml in this chart.
 ##
 vhostsConfigMap: ""
@@ -58,10 +54,6 @@ ingress:
   ## @param ingress.enabled Set to true to enable ingress record generation
   ##
   enabled: true
-
-  ## @param ingress.pathType Ingress path type
-  ##
-  pathType: Prefix
 
   ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
   ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
@@ -76,6 +68,10 @@ ingress:
   ## @param ingress.path The main URI Path.
   ##
   path: /data/
+
+  ## @param ingress.pathType Ingress path type
+  ##
+  pathType: Prefix
 
   ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
   ## For a full list of possible ingress annotations, please see
@@ -122,19 +118,15 @@ ingress:
       }
 
   tlsWwwPrefix: true
+
   tls: []
 
   ## @param ingress.extraPaths An array with additional arbitrary paths & pathTypes to add
   ## Don't define backend; this is auto-populated to point to the apache service
   ## e.g:
-  ## extraPaths:
-  ##   - path: /software/dist/
-  ##     pathType: Prefix
   ##   - path: /icons/
   ##     pathType: Prefix
   ##
   extraPaths:
-    - path: /software/dist/
-      pathType: Prefix
     - path: /icons/
       pathType: Prefix
