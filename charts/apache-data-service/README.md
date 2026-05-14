@@ -35,6 +35,9 @@ kubectl create secret docker-registry dhi-pull-secret \
   --docker-email=<YOUR_EMAIL>
  ```
 
+> [!TIP]
+> A copy of the resulting image pull secret for prod-knb is stored encrypted in our private GitHub Enterprise security repo.
+
 ## Deploy
 
 ```shell
