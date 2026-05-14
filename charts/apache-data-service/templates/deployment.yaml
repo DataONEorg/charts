@@ -50,8 +50,8 @@ spec:
       volumes:
         - name: vhosts-config
           configMap:
-            {{- if .Values.vhostsConfigMap }}
-            name: {{ .Values.vhostsConfigMap }}
+            {{- if .Values.customVhostsConfig.enabled }}
+            name: {{ .Values.customVhostsConfig.configMapName }}
             {{- else }}
             name: {{ include "apache-datasvc.fullname" . }}-vhost
             {{- end }}

@@ -45,10 +45,51 @@ extraVolumeMounts:
     mountPath: /var/files
     subPath: ""
 
-## @param vhostsConfigMap Name of config map used to override virtual hosts content. If blank,
-## defaults to using configmap-vhost.yaml in this chart.
+## @param ingress.iconFilePath filesystem path to default icons shipped with Apache image.
+## Absolute file path: use leading slash but NO TRAILING SLASH!
+## e.g:
+## iconFilePath: /usr/local/apache2/icons
 ##
-vhostsConfigMap: ""
+## (Also see 'ingress.iconPath')
+##
+iconFilePath: /usr/local/apache2/icons
+
+## @param extraRoutes An array with additional arbitrary URI paths for static files to be served
+## Don't define backend; this is auto-populated to point to the Apache service
+## extraRoutes:
+##  - ingressPath:      Ingress URI path: use leading slash but NO TRAILING SLASH!
+##    ingressPathType:  Ingress path type: Prefix or Exact
+##    filePath:         Absolute filesystem path: use leading slash but NO TRAILING SLASH!
+##
+## In addition to configuring ingress paths, these are also used to create entries in the
+## Apache vhosts config, like this:
+##       Alias "{{ $p.ingressPath }}/" "{{ $p.filePath }}/"
+##       <Directory "{{ $p.filePath }}">
+##           Options +FollowSymlinks +Indexes
+##           Require all granted
+##       </Directory>
+##
+## If you need to customize this, you can provide your own Apache vhosts config; see vhostsConfigMap
+##
+## example:
+## extraRoutes:
+## - ingressPath: /data
+##   ingressPathType: Prefix
+##   filePath: /var/files/data
+## - ingressPath: /software/dist
+##   ingressPathType: Prefix
+##   filePath: /var/files/software/dist
+##
+routes: []
+
+## @param customVhostsConfig Use a user-provided ConfigMap to override chart's virtual hosts content
+## @param customVhostsConfig.enabled If false, defaults to using configmap-vhost.yaml in this chart,
+##                                   populated from values in 'routes'
+## @param customVhostsConfig.configMapName Name of config map used to override virtual hosts file
+##
+customVhostsConfig:
+  enabled: false
+  configMapName: ""
 
 ingress:
   ## @param ingress.enabled Set to true to enable ingress record generation
@@ -64,14 +105,6 @@ ingress:
   ## @param ingress.hostname Default host for the ingress resource (REQUIRED)
   ##
   hostname: localhost
-
-  ## @param ingress.path The main URI Path.
-  ##
-  path: /data/
-
-  ## @param ingress.pathType Ingress path type
-  ##
-  pathType: Prefix
 
   ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
   ## For a full list of possible ingress annotations, please see
@@ -120,13 +153,3 @@ ingress:
   tlsWwwPrefix: true
 
   tls: []
-
-  ## @param ingress.extraPaths An array with additional arbitrary paths & pathTypes to add
-  ## Don't define backend; this is auto-populated to point to the apache service
-  ## e.g:
-  ##   - path: /icons/
-  ##     pathType: Prefix
-  ##
-  extraPaths:
-    - path: /icons/
-      pathType: Prefix

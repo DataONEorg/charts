@@ -1,3 +1,4 @@
+{{- if not .Values.customVhostsConfig.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,23 +13,20 @@ data:
 
         Header always append X-Frame-Options SAMEORIGIN
 
-        Alias /icons/ "/usr/local/apache2/icons/"
-        <Directory "/usr/local/apache2/icons">
+        Alias "/icons/" "{{ .Values.iconFilePath }}/"
+        <Directory "{{ .Values.iconFilePath }}">
           Options +Indexes
           Require all granted
         </Directory>
 
-        Alias "/data/" "/var/files/data/"
-        <Directory "/var/files/data">
-            Options +FollowSymlinks +Indexes
-            Require all granted
-        </Directory>
+      {{- range $p := $.Values.routes }}
 
-        Alias "/software/dist/" "/var/files/software/dist/"
-        <Directory "/var/files/software/dist">
+        Alias "{{ $p.ingressPath }}/" "{{ $p.filePath }}/"
+        <Directory "{{ $p.filePath }}">
             Options +FollowSymlinks +Indexes
             Require all granted
         </Directory>
+      {{- end }}
 
         AllowEncodedSlashes On
         AcceptPathInfo      On
@@ -128,3 +126,4 @@ data:
         IndexIgnoreReset ON
         IndexIgnore .??* *~ *# RCS CVS *,v *,t
     </VirtualHost>
+{{- end }}
