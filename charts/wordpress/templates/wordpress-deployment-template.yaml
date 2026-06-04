@@ -55,6 +55,7 @@ spec:
                 $wparctic_public_host = '{{ .Values.ingress.host }}';
                 $wparctic_admin_host = '{{ if and .Values.adminIngress.enabled .Values.adminIngress.host }}{{ .Values.adminIngress.host }}{{ else }}{{ .Values.ingress.host }}{{ end }}';
                 {{- if eq .role "rw" }}
+                // Keep admin/login cookies scoped to the admin host.
                 define('WP_HOME', 'https://' . $wparctic_admin_host);
                 define('WP_SITEURL', 'https://' . $wparctic_admin_host);
                 {{- else }}
@@ -75,6 +76,75 @@ spec:
                     }
                     return $caps;
                   }, 10, 2);
+
+                  {{- if eq .role "rw" }}
+                  // Keep post-login admin redirects on the admin host so auth cookies are honored.
+                  add_filter('login_redirect', static function ($redirect_to, $requested_redirect_to, $user) use ($wparctic_public_host, $wparctic_admin_host) {
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+
+                    if (!is_wp_error($user) && !empty($user) && is_string($redirect_to) && str_contains($redirect_to, '/wp-admin')) {
+                      return str_replace($public, $admin, $redirect_to);
+                    }
+
+                    if (!is_wp_error($user) && !empty($user) && is_string($requested_redirect_to) && str_contains($requested_redirect_to, '/wp-admin')) {
+                      return str_replace($public, $admin, $requested_redirect_to);
+                    }
+
+                    return $redirect_to;
+                  }, 10, 3);
+
+                  // Show public URLs in admin copy/paste surfaces, except auth/admin paths.
+                  $wparctic_to_public_url = static function ($url) use ($wparctic_public_host, $wparctic_admin_host) {
+                    if (!is_string($url) || $url === '') {
+                      return $url;
+                    }
+
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+                    $urlOnAdmin = str_replace($public, $admin, $url);
+                    $path = parse_url($urlOnAdmin, PHP_URL_PATH);
+                    $normalizedPath = is_string($path) ? $path : '';
+
+                    if ($normalizedPath === '/wp-login.php' || str_starts_with($normalizedPath, '/wp-admin')) {
+                      return $urlOnAdmin;
+                    }
+
+                    return str_replace($admin, $public, $urlOnAdmin);
+                  };
+
+                  add_filter('home_url', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+                  add_filter('post_link', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+                  add_filter('page_link', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+                  add_filter('post_type_link', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+                  add_filter('attachment_link', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+                  add_filter('wp_get_attachment_url', static function ($url) use ($wparctic_to_public_url) {
+                    return $wparctic_to_public_url($url);
+                  }, 10, 1);
+
+                  // Ensure media links copied from admin resolve to the public host.
+                  add_filter('upload_dir', static function ($dirs) use ($wparctic_public_host, $wparctic_admin_host) {
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+                    if (!empty($dirs['baseurl'])) {
+                      $dirs['baseurl'] = str_replace($admin, $public, $dirs['baseurl']);
+                    }
+                    if (!empty($dirs['url'])) {
+                      $dirs['url'] = str_replace($admin, $public, $dirs['url']);
+                    }
+                    return $dirs;
+                  });
+                  {{- end }}
                 }
                 {{- if .disallowFileMods }}
                 define('DISALLOW_FILE_MODS', true);
