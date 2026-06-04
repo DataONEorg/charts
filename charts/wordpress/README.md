@@ -61,28 +61,27 @@ Minimal chart to deploy WordPress and its database dependency, MariaDB (e.g. at 
 
 The production cephfs subvolume (`pdg`) is backed up daily - see [K8s Backups Quick Reference](https://github.com/DataONEorg/k8s-cluster/blob/main/admin/backup-summary.md#k8s-backups-quick-reference). This means we have a daily snapshot of the MariaDB data files on disk, and the WordPress `wp-content` files. However, it is best to do a quick manual backups immediately before upgrade, especially if the upgrade includes a major version change:
 
-1. `wp-content` files: copy to a backup directory on the ceph mount, inside `/repos/dev/wordpress/wp-content`:
+1. `wp-content` files: copy to a backup directory on the ceph mount:
 
-    ```shell
-    $ ssh datateam  # (for prod adc) or knbvm (test.adc)
-   
-    $ sudo sudo rm -rf /mnt/ceph/repos/arctic/wordpress/wp-files/wp-content-backup-deleteme \
-          && sudo mkdir -p /mnt/ceph/repos/arctic/wordpress/wp-files/wp-content-backup-deleteme \
-
-    $ sudo cp -a /mnt/ceph/repos/arctic/wordpress/wp-files/wordpress/wp-content \
-              /mnt/ceph/repos/arctic/wordpress/wp-files/wp-content-backup-deleteme
+   ```shell
+    # FROM YOUR LOCAL MACHINE:
+    # May take 6 minutes or more
+    #
+    ssh datateam.nceas.ucsb.edu 'sudo tar -czf \
+      /mnt/ceph/repos/arctic/wordpress/temp-backups/wp_files_backup_$(date +%Y%m%d_%H%M%S).tgz \
+      /mnt/ceph/repos/arctic/wordpress/wp-files'
     ```
 
 2. Database Dump: saves to a file on the ceph mount, inside `/repos/dev/wordpress/mariadb`:
 
     ```shell
-    kubectl -n arctic exec wparctic-mariadb-0 -- \
-        mariadb-dump -u arcticadata -p arcticadata_wp \
-        > /var/lib/mysql/db-temp-backup-deleteme.sql
-   
-    # where arcticadata is the username, arcticadata_wp is the DB name, and
-    # you will be prompted for the password (from the secret)
-    # NOTE it's arcticadata and arcticadata_wp, not arcticdata/arcticdata_wp!
+    # FROM YOUR LOCAL MACHINE:
+    #
+    kubectl exec -it wparctic-mariadb-0 -- bash -c ' \
+      mariadb-dump -u root -p"$MARIADB_ROOT_PASSWORD" arcticadata_wp \
+        > /var/lib/mysql/manual_backup_$(date +%Y%m%d_%H%M%S).sql'
+
+    # NOTE it's  arcticadata_wp, not arcticdata_wp!
     ```
 
 ## Rollback & Recovery
@@ -95,25 +94,21 @@ Safest rollback sequence:
 
     ```shell
     # From inside the mariadb pod:
-    mariadb -u arcticadata -p arcticadata_wp  <  /var/lib/mysql/db-temp-backup-deleteme.sql
+    mariadb -u root -p"$MARIADB_ROOT_PASSWORD" arcticadata_wp  <  /var/lib/mysql/manual_backup_<date>.sql
    
-    # where arcticadata is the username, arcticadata_wp is the DB name, and
-    # you will be prompted for the password (from the secret)
-    # NOTE it's arcticadata and arcticadata_wp, not arcticdata/arcticdata_wp!
+    # NOTE it's  arcticadata_wp, not arcticdata_wp!
     ```
+
 > [!IMPORTANT]
-> If you are restoring DB files from another instance (e.g. copy from prod to test) instead of using a dump file:
+> If you are copying DB files from another instance instead of using a dump file (e.g. copy from prod to test):
 > 1. Make sure the entire directory is owned by UID `999` (the mysql user in the MariaDB container)
-> 2. Delete the `tc.log` file in the `mariadb/data` directory if you see errors about recovery failure and tc log during startup.
+> 2. Delete the `tc.log` file in the target `mariadb/data` directory if you see errors about recovery failure and tc log during startup.
 
 2. (If necessary) Restore `wp-content` from pre-upgrade backup/snapshot.
 
     ```shell
-    $ ssh datateam  # (for prod adc) or knbvm (test.adc)
-   
-    $ sudo rm -rf /mnt/ceph/repos/arctic/wordpress/wp-files/wordpress/wp-content \
-          && sudo cp -a /mnt/ceph/repos/arctic/wordpress/wp-files/wp-content-backup-deleteme \
-              /mnt/ceph/repos/arctic/wordpress/wp-files/wordpress/wp-content
+    ssh datateam \
+      'sudo tar -xzf /mnt/ceph/repos/arctic/wordpress/temp-backups/wp_files_backup_<date>.tgz -C /'
     ```
 
 > [!IMPORTANT]
