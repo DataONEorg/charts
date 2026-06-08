@@ -160,7 +160,7 @@ spec:
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: /wp-login.php
+              path: /robots.txt
               port: http
             initialDelaySeconds: 60
             periodSeconds: 20
