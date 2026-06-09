@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wp-php-overrides
+data:
+  uploads.ini: |
+    upload_max_filesize = {{ .Values.wordpress.uploadLimits.maxFilesize }}
+    post_max_size = {{ .Values.wordpress.uploadLimits.postMaxSize }}
+    memory_limit = {{ .Values.wordpress.uploadLimits.memoryLimit }}

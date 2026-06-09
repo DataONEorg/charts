@@ -186,6 +186,11 @@ spec:
               {{- if .readOnlyVolume }}
               readOnly: true
               {{- end }}
+            {{- if eq .role "rw" }}
+            - name: php-config
+              mountPath: /usr/local/etc/php/conf.d/uploads.ini
+              subPath: uploads.ini
+            {{- end }}
             {{- if .Values.robotsTxt.enabled }}
             - name: robots-txt
               mountPath: /var/www/html/robots.txt
@@ -195,6 +200,11 @@ spec:
         - name: wordpress-data
           persistentVolumeClaim:
             claimName: {{ .Values.wordpress.persistence.existingClaim }}
+        {{- if eq .role "rw" }}
+        - name: php-config
+          configMap:
+            name: wp-php-overrides
+        {{- end }}
         {{- if .Values.robotsTxt.enabled }}
         - name: robots-txt
           configMap:

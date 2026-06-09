@@ -22,6 +22,25 @@ wordpress:
     limits:
       cpu: "4"
       memory: 4Gi
+
+  ## Overriding the default 2MB PHP upload limit
+  uploadLimits:
+    ## PHP upload_max_filesize setting. This is the maximum size of an uploaded file.
+    ##
+    maxFilesize: 100M
+
+    ## PHP post_max_size setting. Must be larger than upload_max_filesize to allow for the request
+    ## envelope. NOTE that the ingress must also be configured to allow payloads at least this large
+    ## (See adminIngress.annotations.'nginx.ingress.kubernetes.io/proxy-body-size')
+    ##
+    postMaxSize: 105M
+
+    ## PHP memory_limit setting. Typical baseline WordPress installation generally needs ~128 MB RAM
+    ## just to idle and process standard web requests, on top of to the upload limits set above.
+    ## Increase if seeing OOM errors
+    ##
+    memoryLimit: 256M
+
   service:
     port: 80
   ## postStart command to remove the default Akismet and Hello Dolly plugins and default themes that
@@ -144,7 +163,9 @@ adminIngress:
   path: /wp-admin
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "85m"
+    ## proxy-body-size must be at least as big as the PHP post_max_size setting
+    ## (See wordpress.uploadLimits.postMaxSize)
+    nginx.ingress.kubernetes.io/proxy-body-size: "105m"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       # Normalize admin URL without a trailing slash before proxying to WordPress.
       if ($request_uri = "/wp-admin") {
