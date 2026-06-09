@@ -113,8 +113,15 @@ spec:
                     return str_replace($admin, $public, $urlOnAdmin);
                   };
 
-                  add_filter('home_url', static function ($url) use ($wparctic_to_public_url) {
-                    return $wparctic_to_public_url($url);
+                  // Keep Gutenberg REST calls on the admin host to preserve nonce/cookie auth.
+                  add_filter('rest_url', static function ($url) use ($wparctic_public_host, $wparctic_admin_host) {
+                    if (!is_string($url) || $url === '') {
+                      return $url;
+                    }
+
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+                    return str_replace($public, $admin, $url);
                   }, 10, 1);
                   add_filter('post_link', static function ($url) use ($wparctic_to_public_url) {
                     return $wparctic_to_public_url($url);
