@@ -101,11 +101,14 @@ ingress:
   host: localhost
   ## @param ingress.tlsSecretName secret for main public site. Matches ADC site TLS secret name
   ##
-  tlsSecretName: ingress-wp-tls-cert
+  tlsSecretName: ingress-tls-cert
+  ## Automatically add support for mapping www.example.com to example.com (adds entries in ingress
+  ## annotations and tls block)
+  ##
+  tlsWwwPrefix: true
   pathType: Prefix
   path: /
   annotations:
-    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite ^/(sitemap.+) /metacat/sitemaps/$1 redirect;
 
@@ -156,14 +159,19 @@ adminIngress:
   ##
   host: localhost
   ## @param adminIngress.tlsSecretName secret for admin url. DIFFERENT from ADC site TLS secret name
+  ## since hostname is unique and not shared by other ingresses
   ##
   tlsSecretName: ingress-wpadmin-tls-cert
   pathType: Prefix
   path: /wp-admin
   annotations:
+    ## OK to auto-generate a cert for admin url (since hostname is unique and not shared by other
+    ## ingresses), PROVIDED WE USE A tlsSecretName THAT IS DIFFERENT FROM THE REGULAR ADC TLS SECRET
+    ##
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     ## proxy-body-size must be at least as big as the PHP post_max_size setting
     ## (See wordpress.uploadLimits.postMaxSize)
+    ##
     nginx.ingress.kubernetes.io/proxy-body-size: "105m"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       # Normalize admin URL without a trailing slash before proxying to WordPress.
