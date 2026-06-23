@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "apache-datasvc.labels" . | nindent 4 }}
   annotations:
+    {{- if .Values.ingress.tlsWwwPrefix }}
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    {{- end }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}

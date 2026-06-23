@@ -45,6 +45,9 @@ helm upgrade --install datasvcbrooke oci://ghcr.io/dataoneorg/charts/dataone-apa
     -f <my-values-overrides-yaml> -n brooke
 ```
 
+> [!CAUTION]
+> If deploying alongside other ingresses sharing the same hostname (eg Metacat, Wordpress etc), do NOT add the `cert-manager.io/cluster-issuer: "letsencrypt-prod"` annotation, since this automatically generates a Certificate object, which will overwrite existing one(s). Instead, manually deploy a Certificate and let cert-manager do the rest. Follow the same guidelines for the other ingress definition(s) too.
+
 ## Troubleshooting
 
 Docker Hardened Images do not include a shell, so you cannot exec into the pod to troubleshoot. 

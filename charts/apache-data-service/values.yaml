@@ -139,7 +139,6 @@ ingress:
   ##   cert-manager.io/cluster-issuer: cluster-issuer-name
   ##
   annotations:
-    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       # Cors Setup
 
@@ -170,6 +169,16 @@ ingress:
         return 204;
       }
 
+  ## Automatically add support for mapping www.example.com to example.com (adds entries in Apache
+  ## VirtualHost config; ingress annotations; and tls block below)
   tlsWwwPrefix: true
 
+  ## NOTE: tls.secretName must match the manually-deployed Certificate secretName, and be same as
+  ##       other ingresses that share these hostnames
+  ## Example:
+  ##   tls:
+  ##    - hosts:
+  ##        - arcticdata.io
+  ##      secretName: ingress-nginx-tls-cert
+  ##
   tls: []
