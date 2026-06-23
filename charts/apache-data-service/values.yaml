@@ -11,7 +11,7 @@
 image:
   repository: dhi.io/httpd
   tag: "OVERRIDE-BY-USER-REQUIRED"
-  imagePullPolicy: IfNotPresent
+  pullPolicy: IfNotPresent
 
 imagePullSecrets:
   - name: dhi-pull-secret
@@ -19,8 +19,7 @@ imagePullSecrets:
 podSecurityContext:
   fsGroupChangePolicy: OnRootMismatch
 
-containerSecurityContext:
-  fsGroupChangePolicy: OnRootMismatch
+securityContext: {}
 
 ## @param resources Resource requests and limits for the Apache container. Adjust as needed based on
 ## expected load and performance requirements. Note that these are just example values and will
@@ -54,12 +53,14 @@ extraVolumeMounts:
 ##
 iconFilePath: /usr/local/apache2/icons
 
-## @param extraRoutes An array with additional arbitrary URI paths for static files to be served
+## @param routes An array with additional arbitrary URI paths for static files to be served
 ## Don't define backend; this is auto-populated to point to the Apache service
-## extraRoutes:
+## routes:
 ##  - ingressPath:      Ingress URI path: use leading slash but NO TRAILING SLASH!
 ##    ingressPathType:  Ingress path type: Prefix or Exact
-##    filePath:         Absolute filesystem path: use leading slash but NO TRAILING SLASH!
+##    filePath:         (optional) Absolute filesystem path: use leading slash but NO TRAILING
+##                      SLASH! If omitted, no Apache vhosts entry will be created (see below); only
+##                      an ingress path will be created.
 ##
 ## In addition to configuring ingress paths, these are also used to create entries in the
 ## Apache vhosts config, like this:
@@ -71,16 +72,36 @@ iconFilePath: /usr/local/apache2/icons
 ##
 ## If you need to customize this, you can provide your own Apache vhosts config; see vhostsConfigMap
 ##
-## example:
-## extraRoutes:
-## - ingressPath: /data
-##   ingressPathType: Prefix
-##   filePath: /var/files/data
-## - ingressPath: /software/dist
-##   ingressPathType: Prefix
-##   filePath: /var/files/software/dist
+## Example for ADC:
+## routes:
+##  - ingressPath: /data
+##    ingressPathType: Prefix
+##    filePath: /var/data
+##  - ingressPath: /fever/data
+##    ingressPathType: Prefix
+##  - ingressPath: /research.gov
+##    ingressPathType: Prefix
 ##
 routes: []
+
+## @param extraModules Additional Apache modules to be enabled. Must include 'LoadModule' directives
+## Example for ADC:
+## extraModules: |-
+##   LoadModule proxy_module modules/mod_proxy.so
+##   LoadModule proxy_http_module modules/mod_proxy_http.so
+##   LoadModule proxy_connect_module modules/mod_proxy_connect.so
+##   LoadModule ssl_module modules/mod_ssl.so
+##
+extraModules: ""
+
+## @param extraVhostConfig Additional configuration to be added to the Apache vhosts config template
+## Example for ADC:
+## extraVhostConfig: |-
+##   ProxyPass        "/research.gov/awardapi-service/v1/awards.json" "https://www.research.gov/awardapi-service/v1/awards.json"
+##   ProxyPassReverse "/research.gov/awardapi-service/v1/awards.json" "https://www.research.gov/awardapi-service/v1/awards.json"
+##   SSLProxyEngine   on
+##
+extraVhostConfig: ""
 
 ## @param customVhostsConfig Use a user-provided ConfigMap to override chart's virtual hosts content
 ## @param customVhostsConfig.enabled If false, defaults to using configmap-vhost.yaml in this chart,

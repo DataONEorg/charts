@@ -7,11 +7,25 @@ metadata:
     {{- include "apache-datasvc.labels" . | nindent 4 }}
 data:
   {{ .Values.ingress.hostname }}.conf: |
+{{- if .Values.extraModules }}
+{{ .Values.extraModules | indent 4 }}
+{{- end }}
     <VirtualHost *:8080>
         DocumentRoot /var/www/html
         ServerName {{ .Values.ingress.hostname }}
+        {{- if .Values.ingress.tlsWwwPrefix }}
+        ServerAlias www.{{ .Values.ingress.hostname }}
+        {{- end }}
 
         Header always append X-Frame-Options SAMEORIGIN
+
+        AllowEncodedSlashes On
+        AcceptPathInfo      On
+{{ if .Values.extraVhostConfig }}
+{{ .Values.extraVhostConfig | indent 8 }}
+{{- end }}
+
+        # ----- Aliases and directory access -----
 
         Alias "/icons/" "{{ .Values.iconFilePath }}/"
         <Directory "{{ .Values.iconFilePath }}">
@@ -20,16 +34,14 @@ data:
         </Directory>
 
       {{- range $p := $.Values.routes }}
-
+        {{- if $p.filePath }}
         Alias "{{ $p.ingressPath }}/" "{{ $p.filePath }}/"
         <Directory "{{ $p.filePath }}">
             Options +FollowSymlinks +Indexes
             Require all granted
         </Directory>
+        {{- end }}
       {{- end }}
-
-        AllowEncodedSlashes On
-        AcceptPathInfo      On
 
         ############################################################################################
         # Directives controlling the display of server-generated directory listings.
