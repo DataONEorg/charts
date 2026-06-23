@@ -10,8 +10,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
-    {{- range $host := (include "apache-datasvc.ingressHosts" . | fromYamlArray) }}
-    - host: {{ $host }}
+    - host: {{ .Values.ingress.hostname }}
       http:
         paths:
           - path: /icons/
@@ -30,7 +29,6 @@ spec:
                 port:
                   name: http
           {{- end }}
-    {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
     {{- range $tls := .Values.ingress.tls }}

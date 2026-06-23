@@ -139,7 +139,6 @@ ingress:
   ##   cert-manager.io/cluster-issuer: cluster-issuer-name
   ##
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       # Cors Setup
