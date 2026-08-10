@@ -89,6 +89,18 @@ The production cephfs subvolume (`pdg`) is backed up daily - see [K8s Backups Qu
 > [!CAUTION]
 > If the failed upgrade changed the DB schema and/or `wp-content`, a `helm rollback` alone is not sufficient!
 
+> [!TIP]
+> The WP files and MariaDB data files are in `datateam:/mnt/ceph/repos/arctic/wordpress/`
+> You can find ceph snapshot backups of these from the past month in: `datateam:/mnt/ceph/.snap/`
+> Example commands to copy from backup and delete any existing files that were not in backup (eg to recover from a hack):
+> ```shell
+> sudo rsync -av --delete  /mnt/ceph/.snap/_scheduled-2026-07-20-02_00_00_UTC_1099511650893/repos/arctic/wordpress/wp-files/ \
+>         /mnt/ceph/repos/arctic/wordpress/wp-files/
+>
+> sudo rsync -av --delete /mnt/ceph/.snap/_scheduled-2026-07-20-02_00_00_UTC_1099511650893/repos/arctic/wordpress/mariadb/data/ \
+>         /mnt/ceph/repos/arctic/wordpress/mariadb/data/
+> ```
+
 Safest rollback sequence:
 1. (If necessary) Restore DB from pre-upgrade backup/snapshot
 
@@ -98,6 +110,7 @@ Safest rollback sequence:
    
     # NOTE it's  arcticadata_wp, not arcticdata_wp!
     ```
+
 
 > [!IMPORTANT]
 > If you are copying DB files from another instance instead of using a dump file (e.g. copy from prod to test):
