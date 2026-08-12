@@ -10,7 +10,7 @@ wordpress:
     repository: docker.io/library/wordpress
     tag: "OVERRIDE-BY-USER-REQUIRED"
     digest: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   existingSecret: wparctic-wordpress
   persistence:
     existingClaim: wparctic-wordpress-0

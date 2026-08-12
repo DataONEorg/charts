@@ -8,7 +8,8 @@ wordpress:
   image:
     ## Starting version was "6.8.2-php8.2-apache"
     ##
-    tag: "7.0.0-php8.5-apache"
+    tag: "7-php8.5-apache"
+    pullPolicy: Always
   existingSecret: wparctic-wordpress
   persistence:
     existingClaim: wparctic-wordpress-0
