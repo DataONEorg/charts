@@ -64,8 +64,8 @@ spec:
                 {{- end }}
                 define( 'FORCE_SSL_ADMIN', true );
                 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) $_SERVER['HTTPS'] = 'on';
-                define('WP_AUTO_UPDATE_CORE', false);
-                define('AUTOMATIC_UPDATER_DISABLED', true);
+                define('WP_AUTO_UPDATE_CORE', 'minor');
+                define('AUTOMATIC_UPDATER_DISABLED', false);
                 if (!function_exists('add_filter') && defined('ABSPATH') && file_exists(ABSPATH . 'wp-includes/plugin.php')) {
                   require_once ABSPATH . 'wp-includes/plugin.php';
                 }
