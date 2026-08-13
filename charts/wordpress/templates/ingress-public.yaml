@@ -7,10 +7,8 @@ metadata:
     {{- include "wparctic.labels" . | nindent 4 }}
     app.kubernetes.io/component: wordpress
   annotations:
-    {{- if .Values.ingress.tlsWwwPrefix }}
-    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
-    {{- end }}
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace -}}
+            -{{ .Release.Name }}-middleware-chain-public@kubernetescrd"
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

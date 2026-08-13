@@ -7,6 +7,8 @@ metadata:
     {{- include "wparctic.labels" . | nindent 4 }}
     app.kubernetes.io/component: wordpress
   annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace -}}
+            -{{ .Release.Name }}-middleware-chain-admin@kubernetescrd"
     {{- toYaml .Values.adminIngress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.adminIngress.className }}
