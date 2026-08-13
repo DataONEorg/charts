@@ -1,0 +1,23 @@
+##
+## Only one middleware can be added to the ingress annotations. This middleware "chain" definition
+## chains together all the other Traefik Middlewares, so only this one needs to be referenced
+## in the ingress annotations. THIS CHAIN IS FOR THE ADMIN INGRESS
+##
+## * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+## IMPORTANT: ADD THE NAMES OF ANY NEW MIDDLEWARES TO THIS TEMPLATE, OR THEY WON'T BE LOADED!
+## * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+##
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Release.Name }}-middleware-chain-admin
+  namespace: {{ .Release.Namespace }}
+spec:
+  chain:
+    middlewares:
+    {{- if .Values.adminIngress.ipAllowList }}
+      - name: {{ $.Release.Name }}-ip-allowlist-admin
+    {{- end }}
+    {{- range .Values.adminIngress.rewriteRules }}
+      - name: {{ $.Release.Name }}-{{ .name }}-admin
+    {{- end }}
