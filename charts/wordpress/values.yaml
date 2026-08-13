@@ -110,6 +110,7 @@ ingress:
   tlsWwwPrefix: true
   pathType: Prefix
   path: /
+  annotations: {}
 
   ## @param ingress.rewriteRules Traefik rewrite rules that will be added to the middleware chain
   ##
