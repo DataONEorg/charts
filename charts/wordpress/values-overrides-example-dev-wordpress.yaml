@@ -1,4 +1,4 @@
-replicaCount: 3
+replicaCount: 2
 ## if replicaCount < 2, set podDisruptionBudget.enabled to false, to avoid eviction issues
 ## Otherwise, set to true
 podDisruptionBudget:
