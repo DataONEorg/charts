@@ -9,7 +9,9 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace -}}
             -{{ .Release.Name }}-middleware-chain-public@kubernetescrd"
+    {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
