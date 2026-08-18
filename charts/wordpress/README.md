@@ -56,6 +56,7 @@ php -r "require 'wp-load.php'; do_action('wp_version_check'); do_action('wp_mayb
   - release notes: https://wordpress.org/news/category/releases/
 - MariaDB
   - image tags: https://hub.docker.com/_/mariadb?tab=tags
+  - release notes: https://mariadb.com/docs/release-notes/community-server
   - upgrade notes (major/minor specifics): https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/upgrading/upgrading-from-to-specific-versions
 
 

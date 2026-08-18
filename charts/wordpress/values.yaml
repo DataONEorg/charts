@@ -10,6 +10,7 @@ wordpress:
     repository: docker.io/library/wordpress
     ## DEFINE ONLY MAJOR-VERSION TAGS, to allow auto upgrade on pod redeploy
     ## Example: tag: "7-php8.5-apache" (*NOT* "7.0-php8.5-apache" or "7.0.4-php8.5-apache")
+    ## Available image tags: https://hub.docker.com/_/wordpress?tab=tags
     tag: "OVERRIDE-BY-USER-REQUIRED"
     digest: ""
     pullPolicy: Always
@@ -67,7 +68,7 @@ wordpress:
             done
           ) &
           exit 0
-  ## Wordpress hokey internal update cron is disabled, and instead we run it from a proper cron job
+  ## WordPress hokey internal update cron is disabled, and instead we run it from a proper cron job
   ## Min  Hour Day  Month Weekday
   ##  *    *    *    *    *  command to be executed
   ##  ┬    ┬    ┬    ┬    ┬
@@ -82,6 +83,7 @@ mariadb:
   autoUpgrade: true
   image:
     repository: docker.io/library/mariadb
+    ## Available image tags: https://hub.docker.com/_/mariadb?tab=tags
     tag: "OVERRIDE-BY-USER-REQUIRED"
     digest: ""
     pullPolicy: IfNotPresent

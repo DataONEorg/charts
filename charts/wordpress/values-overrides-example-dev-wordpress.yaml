@@ -6,8 +6,7 @@ podDisruptionBudget:
 
 wordpress:
   image:
-    ## Starting version was "6.8.2-php8.2-apache"
-    ##
+    ## Available image tags: https://hub.docker.com/_/wordpress?tab=tags
     tag: "7-php8.5-apache"
   existingSecret: wparctic-wordpress
   persistence:
@@ -22,9 +21,8 @@ wordpress:
 
 mariadb:
   image:
-    ## Starting version was "11.4"
-    ##
-    tag: "12.2"
+    ## Available image tags: https://hub.docker.com/_/mariadb?tab=tags
+    tag: "12.3"
   existingSecret: wparctic-mariadb
   persistence:
     existingClaim: wparctic-wordpress-mariadbd-0
