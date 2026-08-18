@@ -6,7 +6,10 @@ podDisruptionBudget:
 
 wordpress:
   image:
+    ## DEFINE ONLY MAJOR-VERSION TAGS, to allow auto upgrade on pod redeploy
+    ## Example: tag: "7-php8.5-apache" (*NOT* "7.0-php8.5-apache" or "7.0.4-php8.5-apache")
     ## Available image tags: https://hub.docker.com/_/wordpress?tab=tags
+    ## release notes: https://wordpress.org/news/category/releases/
     tag: "7-php8.5-apache"
   existingSecret: wparctic-wordpress
   persistence:
@@ -22,6 +25,9 @@ wordpress:
 mariadb:
   image:
     ## Available image tags: https://hub.docker.com/_/mariadb?tab=tags
+    ## release notes: https://mariadb.com/docs/release-notes/community-server
+    ## upgrade notes (major/minor specifics):
+    ## https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/upgrading/upgrading-from-to-specific-versions
     tag: "12.3"
   existingSecret: wparctic-mariadb
   persistence:
