@@ -8,6 +8,8 @@ podDisruptionBudget:
 wordpress:
   image:
     repository: docker.io/library/wordpress
+    ## DEFINE ONLY MAJOR-VERSION TAGS, to allow auto upgrade on pod redeploy
+    ## Example: tag: "7-php8.5-apache" (*NOT* "7.0-php8.5-apache" or "7.0.4-php8.5-apache")
     tag: "OVERRIDE-BY-USER-REQUIRED"
     digest: ""
     pullPolicy: Always
@@ -74,7 +76,7 @@ wordpress:
   ##  │    │    └───────────  Day      (1..31)
   ##  │    └────────────────  Hour     (0..23)
   ##  └─────────────────────  Minute   (0..59)
-  updateSchedule: "31 * * * *"        # every hour at 31 mins past
+  updateSchedule: "31 */6 * * *"  # every 6 hours at 31 mins past
 
 mariadb:
   autoUpgrade: true
