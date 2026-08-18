@@ -9,10 +9,42 @@ Minimal chart to deploy WordPress and its database dependency, MariaDB (e.g. at 
 ## Upgrade policy
 
 - The admin UI will show a warning if the WordPress version is out of date.
-- WordPress core updates are disabled in the UI (manual and automatic).
-- Upgrade WordPress and MariaDB only by changing image versions in values overrides (`wordpress.image.tag` and/or `mariadb.image.tag`) and running `helm upgrade`.
+- Manual WordPress core updates are disabled in the UI (the upgrade button is enabled, but clicking it will result in an error message).
+- Automatic security updates are enabled, and checks are run as defined in values.yaml under `wordpress.cronSchedule`
+- Upgrade WordPress only by changing image versions in values overrides (`wordpress.image.tag`) and running `helm upgrade`.
+
+> [!IMPORTANT]
+> Automatically-applied updates are lost when a pod is restarted, which is why we should ensure wp is always running the latest minor/patch image versions by:
+> - Specifying only the **major version** of the image, and
+> - Setting `pullPolicy: Always`
+
+- Upgrade MariaDB only by changing image versions in values overrides (`mariadb.image.tag`) and running `helm upgrade`.
 - Plugin updates and Theme editing can be done in the WordPress admin UI.
 
+### Useful Commands:
+
+All from inside the WP pod:
+
+1. Determine which version is currently running:
+
+```shell
+cd /var/www/html && php -r "require 'wp-includes/version.php'; echo \$wp_version . \"\n\";"
+```
+
+2. Determine when the next auto-update check will execute:
+
+```shell
+php -r "require 'wp-load.php'; \$crons = _get_cron_array(); foreach (\$crons as \$timestamp => \$hooks) \
+  { if (isset(\$hooks['wp_version_check'])) { echo 'wp_version_check next run: ' . date('r', \$timestamp) . \"\n\"; } \
+  if (isset(\$hooks['wp_maybe_auto_update'])) { echo 'wp_maybe_auto_update next run: ' . date('r', \$timestamp) . \"\n\"; } }"
+```
+
+3. Force auto-update check to execute: (NOTE needs to be done on all pods!)
+
+```shell
+php -r "require 'wp-load.php'; do_action('wp_version_check'); do_action('wp_maybe_auto_update'); \
+  echo 'Update hooks fired successfully.\n';"
+```
 
 ## Find latest image versions
 
