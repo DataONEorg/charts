@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "wparctic.wordpressName" . }}-wp-cron
+spec:
+  schedule: {{ .Values.wordpress.updateSchedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          ## Needs permission to 'get' and 'exec' into pods. By convention, we use the namespace
+          ## name as the service account name
+          serviceAccountName: {{ .Release.Namespace }}
+          restartPolicy: OnFailure
+          containers:
+            - name: kubectl-updater
+              image: eclipsefdn/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "=== Starting Security Auto-Updates ==="
+                  PODS=$(kubectl get pods -l app.kubernetes.io/component=wordpress -o jsonpath='{.items[*].metadata.name}')
+
+                  for POD in $PODS; do
+                    echo "Checking and updating pod: $POD"
+                    kubectl exec $POD -- php -r '
+                      require "/var/www/html/wp-load.php";
+                      require_once ABSPATH . "wp-admin/includes/file.php";
+                      require_once ABSPATH . "wp-admin/includes/misc.php";
+                      require_once ABSPATH . "wp-admin/includes/update.php";
+                      require_once ABSPATH . "wp-admin/includes/class-wp-upgrader.php";
+                      require_once ABSPATH . "wp-admin/includes/class-wp-automatic-updater.php";
+
+                      delete_option("auto_updater.lock");
+                      wp_version_check();
+                      $updater = new WP_Automatic_Updater();
+                      $updater->run();
+                    '
+                  done
+                  echo "=== Auto-Updates Complete ==="

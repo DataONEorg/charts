@@ -64,8 +64,10 @@ spec:
                 {{- end }}
                 define( 'FORCE_SSL_ADMIN', true );
                 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) $_SERVER['HTTPS'] = 'on';
+                define('DISABLE_WP_CRON', true);
                 define('WP_AUTO_UPDATE_CORE', 'minor');
                 define('AUTOMATIC_UPDATER_DISABLED', false);
+
                 if (!function_exists('add_filter') && defined('ABSPATH') && file_exists(ABSPATH . 'wp-includes/plugin.php')) {
                   require_once ABSPATH . 'wp-includes/plugin.php';
                 }
@@ -77,12 +79,15 @@ spec:
                     }
                     return $transient;
                   });
-                  add_filter('map_meta_cap', static function ($caps, $cap) {
-                    if ($cap === 'update_core') {
-                      return array('do_not_allow');
+                  add_action('admin_init', static function() {
+                    global $pagenow;
+                    $action = isset($_GET['action']) ? $_GET['action'] : '';
+
+                    if ($pagenow === 'update-core.php' && ($action === 'do-core-upgrade' || $action === 'do-core-reinstall')) {
+                      wp_die('Manual core upgrades and reinstallations have been disabled. Security updates are applied automatically.');
                     }
-                    return $caps;
-                  }, 10, 2);
+                  });
+                  add_filter('auto_core_update_send_email', '__return_false');
 
                   {{- if eq .role "rw" }}
                   // Keep post-login admin redirects on the admin host so auth cookies are honored.
@@ -160,11 +165,7 @@ spec:
                   });
                   {{- end }}
                 }
-                {{- if .disallowFileMods }}
-                define('DISALLOW_FILE_MODS', true);
-                {{- else }}
                 define('FS_METHOD', 'direct');
-                {{- end }}
           readinessProbe:
             httpGet:
               path: /
@@ -190,9 +191,6 @@ spec:
             - name: wordpress-data
               mountPath: /var/www/html/wp-content
               subPath: {{ .Values.wordpress.persistence.subPath }}
-              {{- if .readOnlyVolume }}
-              readOnly: true
-              {{- end }}
             {{- if eq .role "rw" }}
             - name: php-config
               mountPath: /usr/local/etc/php/conf.d/uploads.ini
