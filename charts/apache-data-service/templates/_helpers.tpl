@@ -16,3 +16,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- end -}}
+
+{{/*
+Create a checksum that reflects changes in the config files.
+Do it here, instead of in deployment.yaml, because helm's ordering of operations means that the
+checksum is performed before the values overrides are inserted into the config files, so the
+checksum doesn't change when those values do.
+*/}}
+{{- define "apache.config.checksum" -}}
+{{- $out := "" }}
+{{- range $path, $file := .Files.Glob "templates/*" }}
+  {{- $content := toString $file }}
+  {{- $rendered := tpl $content $ }}
+  {{- $out = printf "%s\n%s" $out $rendered }}
+{{- end }}
+{{- $out | trim | sha256sum -}}
+{{- end -}}
