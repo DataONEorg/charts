@@ -6,15 +6,16 @@ metadata:
   labels:
     {{- include "apache-datasvc.labels" . | nindent 4 }}
   annotations:
-    {{- if .Values.ingress.tlsWwwPrefix }}
-    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
-    {{- end }}
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace -}}
+            -{{ .Release.Name }}-cors-headers@kubernetescrd"
+    {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
     - host: {{ .Values.ingress.hostname }}
-      http:
+      http: &httpPathsAlias
         paths:
           - path: /icons/
             pathType: Prefix
@@ -24,7 +25,7 @@ spec:
                 port:
                   name: http
           {{- range $p := $.Values.routes }}
-          - path: {{ $p.ingressPath }}/
+          - path: {{ $p.ingressPath }}
             pathType: {{ $p.ingressPathType }}
             backend:
               service:
@@ -32,6 +33,10 @@ spec:
                 port:
                   name: http
           {{- end }}
+    {{- if .Values.ingress.tlsWwwPrefix }}
+    - host: www.{{ .Values.ingress.hostname }}
+      http: *httpPathsAlias
+    {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
     {{- range $tls := .Values.ingress.tls }}

@@ -117,11 +117,13 @@ ingress:
   ##
   enabled: true
 
+  corsEnabled: true
+
   ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
   ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
   ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
   ##
-  ingressClassName: nginx
+  ingressClassName: traefik
 
   ## @param ingress.hostname Default host for the ingress resource (REQUIRED)
   ##
@@ -138,36 +140,7 @@ ingress:
   ##   kubernetes.io/ingress.class: nginx
   ##   cert-manager.io/cluster-issuer: cluster-issuer-name
   ##
-  annotations:
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      # Cors Setup
-
-      set $cors 'true';
-
-      if ($request_method = 'OPTIONS') {
-        set $cors ${cors}options;
-      }
-
-      if ($cors = "true") {
-        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
-        more_set_headers 'Access-Control-Allow-Credentials: true';
-        more_set_headers 'Access-Control-Allow-Methods: POST, PUT, GET, OPTIONS';
-        more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
-
-        more_set_headers 'Access-Control-Max-Age: 1728000';
-      }
-
-      if ($cors = "trueoptions") {
-        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
-        more_set_headers 'Access-Control-Allow-Credentials: true';
-        more_set_headers 'Access-Control-Allow-Methods: POST, PUT, GET, OPTIONS';
-        more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
-
-        more_set_headers 'Access-Control-Max-Age: 1728000';
-        more_set_headers 'Content-Type: text/plain charset=UTF-8';
-        more_set_headers 'Content-Length: 0';
-        return 204;
-      }
+  annotations: {}
 
   ## Automatically add support for mapping www.example.com to example.com (adds entries in Apache
   ## VirtualHost config; ingress annotations; and tls block below)
