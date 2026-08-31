@@ -135,20 +135,138 @@ spec:
                     $admin = 'https://' . $wparctic_admin_host;
                     return str_replace($public, $admin, $url);
                   }, 10, 1);
-                  add_filter('post_link', static function ($url) use ($wparctic_to_public_url) {
+
+                  // Ensure preview buttons generated in the admin (e.g. "Preview Changes") point to the admin host so previews resolve to the RW pod.
+                  // Run at high priority so it executes before other permalink rewrites.
+                  add_filter('preview_post_link', static function ($link, $post) use ($wparctic_public_host, $wparctic_admin_host) {
+                    if (!is_string($link) || $link === '') {
+                      return $link;
+                    }
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+                    return str_replace($public, $admin, $link);
+                  }, 1, 2);
+
+                  // REST responses for posts/pages (used by the block editor) sometimes include 'link' fields pointing to the public host.
+                  // Ensure REST responses used in edit context or by users who can edit the post return admin-host links for drafts.
+                  add_filter('rest_prepare_post', static function ($response, $post, $request) use ($wparctic_public_host, $wparctic_admin_host) {
+                    $data = $response->get_data();
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+
+                    // Only modify when context is 'edit' or the current user can edit the post.
+                    $context = $request instanceof WP_REST_Request ? $request->get_param('context') : null;
+                    if ($context === 'edit' || current_user_can('edit_post', $post->ID)) {
+                      if (isset($data['link'])) {
+                        $data['link'] = str_replace($public, $admin, $data['link']);
+                      }
+                      if (isset($data['guid']) && is_array($data['guid']) && isset($data['guid']['rendered'])) {
+                        $data['guid']['rendered'] = str_replace($public, $admin, $data['guid']['rendered']);
+                      }
+                      $response->set_data($data);
+                    }
+                    return $response;
+                  }, 10, 3);
+
+                  add_filter('rest_prepare_page', static function ($response, $post, $request) use ($wparctic_public_host, $wparctic_admin_host) {
+                    $data = $response->get_data();
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+
+                    $context = $request instanceof WP_REST_Request ? $request->get_param('context') : null;
+                    if ($context === 'edit' || current_user_can('edit_post', $post->ID)) {
+                      if (isset($data['link'])) {
+                        $data['link'] = str_replace($public, $admin, $data['link']);
+                      }
+                      if (isset($data['guid']) && is_array($data['guid']) && isset($data['guid']['rendered'])) {
+                        $data['guid']['rendered'] = str_replace($public, $admin, $data['guid']['rendered']);
+                      }
+                      $response->set_data($data);
+                    }
+                    return $response;
+                  }, 10, 3);
+
+                  // Only force admin-host permalinks for admin AJAX flows or non-published posts (drafts/revisions).
+                  // This keeps the Permalink display for published posts pointing to the public host.
+                  add_filter('post_link', static function ($url, $post = null, $leavename = '') use ($wparctic_to_public_url, $wparctic_public_host, $wparctic_admin_host) {
+                    if (is_admin()) {
+                      $public = 'https://' . $wparctic_public_host;
+                      $admin = 'https://' . $wparctic_admin_host;
+
+                      // Admin AJAX (editor/editor autosaves) should use admin-host links so previews/auth work.
+                      if (defined('DOING_AJAX') && DOING_AJAX) {
+                        return str_replace($public, $admin, $url);
+                      }
+
+                      // If we have a post object and it's not published, keep the admin host (drafts, pending, revisions).
+                      if (is_object($post)) {
+                        $status = isset($post->post_status) ? $post->post_status : '';
+                        if ($status !== 'publish') {
+                          return str_replace($public, $admin, $url);
+                        }
+                      }
+                    }
                     return $wparctic_to_public_url($url);
-                  }, 10, 1);
-                  add_filter('page_link', static function ($url) use ($wparctic_to_public_url) {
+                  }, 10, 3);
+
+                  add_filter('page_link', static function ($url, $post = null) use ($wparctic_to_public_url, $wparctic_public_host, $wparctic_admin_host) {
+                    if (is_admin()) {
+                      $public = 'https://' . $wparctic_public_host;
+                      $admin = 'https://' . $wparctic_admin_host;
+                      if (defined('DOING_AJAX') && DOING_AJAX) {
+                        return str_replace($public, $admin, $url);
+                      }
+                      if (is_object($post)) {
+                        $status = isset($post->post_status) ? $post->post_status : '';
+                        if ($status !== 'publish') {
+                          return str_replace($public, $admin, $url);
+                        }
+                      }
+                    }
                     return $wparctic_to_public_url($url);
-                  }, 10, 1);
-                  add_filter('post_type_link', static function ($url) use ($wparctic_to_public_url) {
+                  }, 10, 2);
+
+                  add_filter('post_type_link', static function ($url, $post = null, $leavename = '') use ($wparctic_to_public_url, $wparctic_public_host, $wparctic_admin_host) {
+                    if (is_admin()) {
+                      $public = 'https://' . $wparctic_public_host;
+                      $admin = 'https://' . $wparctic_admin_host;
+                      if (defined('DOING_AJAX') && DOING_AJAX) {
+                        return str_replace($public, $admin, $url);
+                      }
+                      if (is_object($post)) {
+                        $status = isset($post->post_status) ? $post->post_status : '';
+                        if ($status !== 'publish') {
+                          return str_replace($public, $admin, $url);
+                        }
+                      }
+                    }
                     return $wparctic_to_public_url($url);
-                  }, 10, 1);
+                  }, 10, 3);
+
                   add_filter('attachment_link', static function ($url) use ($wparctic_to_public_url) {
                     return $wparctic_to_public_url($url);
                   }, 10, 1);
                   add_filter('wp_get_attachment_url', static function ($url) use ($wparctic_to_public_url) {
                     return $wparctic_to_public_url($url);
+                  }, 10, 1);
+
+                  // Classic editor sample permalink anchors must point to the public host.
+                  // The preview button itself is a separate WordPress control and already uses the admin-host preview URL via preview_post_link.
+                  add_filter('get_sample_permalink_html', static function ($html) use ($wparctic_public_host, $wparctic_admin_host) {
+                    if (!is_string($html) || $html === '') {
+                      return $html;
+                    }
+
+                    $public = 'https://' . $wparctic_public_host;
+                    $admin = 'https://' . $wparctic_admin_host;
+
+                    return preg_replace_callback('/<a\s+([^>]*?)href=("|\')(https?:\/\/[^"\']*)(\2)([^>]*)>/i', function ($m) use ($public, $admin) {
+                      $before = $m[1];
+                      $quote = $m[2];
+                      $after = $m[5];
+                      $href = str_replace($admin, $public, $m[3]);
+                      return '<a ' . $before . ' href=' . $quote . $href . $quote . $after . '>';
+                    }, $html, 1);
                   }, 10, 1);
 
                   // Ensure media links copied from admin resolve to the public host.
