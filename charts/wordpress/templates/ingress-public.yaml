@@ -7,11 +7,10 @@ metadata:
     {{- include "wparctic.labels" . | nindent 4 }}
     app.kubernetes.io/component: wordpress
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: "{{ .Release.Namespace -}}
-            -{{ .Release.Name }}-middleware-chain-public@kubernetescrd"
-    {{- if .Values.ingress.annotations }}
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- if .Values.ingress.tlsWwwPrefix }}
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     {{- end }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
@@ -50,18 +49,6 @@ spec:
                 name: {{ include "wparctic.wordpressName" . }}
                 port:
                   name: http
-    {{- if .Values.ingress.tlsWwwPrefix }}
-    - host: www.{{ .Values.ingress.host }}
-      http:
-        paths:
-          - path: {{ .Values.ingress.path }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "wparctic.wordpressName" . }}
-                port:
-                  name: http
-    {{- end }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}

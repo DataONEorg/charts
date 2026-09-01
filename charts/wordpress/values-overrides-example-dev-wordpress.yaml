@@ -46,9 +46,6 @@ ingress:
   ##
   host: wp-dev.test.dataone.org
   tlsSecretName: ingress-wp-tls-cert
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-
 adminIngress:
   ## @param adminIngress.host The domain name of the WordPress Admin site (eg: "wp-admin.arcticdata.io")
   ## IMPORTANT:

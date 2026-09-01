@@ -111,7 +111,7 @@ robotsTxt:
 
 ingress:
   enabled: true
-  className: traefik
+  className: nginx
   ## @param ingress.host The domain name of the main public WordPress site (e.g. "arcticdata.io")
   ##
   host: localhost
@@ -124,68 +124,49 @@ ingress:
   tlsWwwPrefix: true
   pathType: Prefix
   path: /
-  annotations: {}
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/(sitemap.+) /metacat/sitemaps/$1 redirect;
 
-  ## @param ingress.rewriteRules Traefik rewrite rules that will be added to the middleware chain
-  ##
-  ## This should be a **YAML LIST** of rules, each with a name, regex, replacement, and optional
-  ## permanent flag (which defaults to "false"). These rules will be added as traefik Middleware
-  ## definitions in middleware-redirects-public.yaml
-  ##
-  ## Example syntax:
-  ##     rewriteRules:
-  ##       - name: sitemap-redirect
-  ##         regex: "^https?://([^/]+)/(sitemap.+)"
-  ##         replacement: "https://${1}/metacat/sitemaps/${2}"
-  ##         permanent: false  # optional; defaults to "false"
-  ##       - name: robots-redirect
-  ##         regex: "^https?://([^/]+)/robots.txt"
-  ##         replacement: "https://${1}/metacat/robots.txt"
-  ##
-  ## Traefik supports regex capture groups using the syntax ( ), which can be back-referenced using
-  ## the syntax ${1}, ${2}, etc. However, no server variables are available (like nginx's ${host},
-  ## ${request_uri}, etc.)
-  ##
-  rewriteRules:
-    - name: sitemap-redirect
-      regex: "^https?://([^/]+)/(sitemap.+)"
-      replacement: "https://${1}/metacat/sitemaps/${2}"
-    - name: old-blog-1
-      regex: "^https?://[^/]+/(dataset-highlight-subsistence-harvests-in-alaskan-communities-along-the-bering-sea-with-dr-james-fall)/?"
-      replacement: "https://arcticdata.io/blog/2018/06/${1}"
-      permanent: true
-    - name: old-blog-2
-      regex: "^https?://[^/]+/(dataset-highlight-phenological-mismatch-in-the-arctic-with-dr-kathy-kelsey)/?"
-      replacement: "https://arcticdata.io/blog/2018/08/${1}"
-      permanent: true
-    - name: old-blog-3
-      regex: "^https?://[^/]+/(dataset-highlight-learning-from-the-hunters-in-savoonga-with-dr-henry-huntington)/?"
-      replacement: "https://arcticdata.io/blog/2019/05/${1}"
-      permanent: true
-    - name: old-blog-4
-      regex: "^https?://[^/]+/(dataset-highlight-investigating-rotten-ice-with-dr-karen-junge)/?"
-      replacement: "https://arcticdata.io/blog/2018/07/${1}"
-      permanent: true
-    - name: old-blog-5
-      regex: "^https?://[^/]+/(dataset-highlight-exploring-the-energy-clouds-atmosphere-and-precipitation-in-summit-greenland-through-icecaps-with-dr-matthew-shupe)/?"
-      replacement: "https://arcticdata.io/blog/2018/10/${1}"
-      permanent: true
-    - name: old-blog-6
-      regex: "^https?://[^/]+/(dataset-highlight-dissolved-organic-carbon-with-dr-rose-cory)/?"
-      replacement: "https://arcticdata.io/blog/2018/04/${1}"
-      permanent: true
-    - name: old-blog-7
-      regex: "^https?://[^/]+/(dataset-highlight-discovering-the-connections-between-mountain-glaciers-and-arctic-groundwater-with-dr-anna-liljedahl)/?"
-      replacement: "https://arcticdata.io/blog/2018/10/${1}"
-      permanent: true
-    - name: old-blog-8
-      regex: "^https?://[^/]+/(dataset-highlight-data-provenance-and-arctic-soil-bacteria)/?"
-      replacement: "https://arcticdata.io/blog/2018/03/${1}"
-      permanent: true
+      ################################################################################################
+      # from arctica:/etc/apache2/sites-enabled/arcticdata.io-ssl.conf
+      ################################################################################################
+
+      # Prevents being framed by external domains
+      add_header X-Frame-Options "SAMEORIGIN" always;
+
+      ########################################################
+      # Link old blog articles to their new locations (legacy)
+      ########################################################
+
+      if ($request_uri = "/dataset-highlight-subsistence-harvests-in-alaskan-communities-along-the-bering-sea-with-dr-james-fall") {
+        return 301 https://arcticdata.io/blog/2018/06/dataset-highlight-subsistence-harvests-in-alaskan-communities-along-the-bering-sea-with-dr-james-fall;
+      }
+      if ($request_uri = "/dataset-highlight-phenological-mismatch-in-the-arctic-with-dr-kathy-kelsey") {
+        return 301 https://arcticdata.io/blog/2018/08/dataset-highlight-phenological-mismatch-in-the-arctic-with-dr-kathy-kelsey;
+      }
+      if ($request_uri = "/dataset-highlight-learning-from-the-hunters-in-savoonga-with-dr-henry-huntington") {
+        return 301 https://arcticdata.io/blog/2019/05/dataset-highlight-learning-from-the-hunters-in-savoonga-with-dr-henry-huntington;
+      }
+      if ($request_uri = "/dataset-highlight-investigating-rotten-ice-with-dr-karen-junge") {
+        return 301 https://arcticdata.io/blog/2018/07/dataset-highlight-investigating-rotten-ice-with-dr-karen-junge;
+      }
+      if ($request_uri = "/dataset-highlight-exploring-the-energy-clouds-atmosphere-and-precipitation-in-summit-greenland-through-icecaps-with-dr-matthew-shupe") {
+        return 301 https://arcticdata.io/blog/2018/10/dataset-highlight-exploring-the-energy-clouds-atmosphere-and-precipitation-in-summit-greenland-through-icecaps-with-dr-matthew-shupe;
+      }
+      if ($request_uri = "/dataset-highlight-dissolved-organic-carbon-with-dr-rose-cory") {
+        return 301 https://arcticdata.io/blog/2018/04/dataset-highlight-dissolved-organic-carbon-with-dr-rose-cory;
+      }
+      if ($request_uri = "/dataset-highlight-discovering-the-connections-between-mountain-glaciers-and-arctic-groundwater-with-dr-anna-liljedahl") {
+        return 301 https://arcticdata.io/blog/2018/10/dataset-highlight-discovering-the-connections-between-mountain-glaciers-and-arctic-groundwater-with-dr-anna-liljedahl;
+      }
+      if ($request_uri = "/dataset-highlight-data-provenance-and-arctic-soil-bacteria") {
+        return 301 https://arcticdata.io/blog/2018/03/dataset-highlight-data-provenance-and-arctic-soil-bacteria;
+      }
 
 adminIngress:
   enabled: true
-  className: traefik
+  className: nginx
   ## @param adminIngress.host The domain name of the WordPress Admin site (eg: "wp-admin.arcticdata.io")
   ## IMPORTANT:
   ## If you are running only ONE WP pod (replicaCount: 1) this must be the same as ingress.host
@@ -199,58 +180,33 @@ adminIngress:
   tlsSecretName: ingress-wpadmin-tls-cert
   pathType: Prefix
   path: /wp-admin
-
-  ## @param adminIngress.ipAllowList Access limited to these IP addresses/ranges. Empty = no restrictions
-  ## For more options on filtering, see the traefik docs for ipAllowList Middleware:
-  ## https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/ipallowlist/
-  ##
-  ## Example:
-  ## ipAllowList:
-  ##  - 128.111.61.0/24
-  ##  - 128.111.64.0/22
-  ##  - 128.111.85.0/24
-  ##
-  ipAllowList:
-    - 128.111.61.0/24
-    - 128.111.64.0/22
-    - 128.111.85.0/24
-    - 128.111.180.0/22
-    - 128.111.188.0/22
-    - 128.111.196.0/23
-    - 207.71.230.208/29
-
-  ## @param adminIngress.rewriteRules Traefik rewrite rules that will be added to the middleware
-  ## chain
-  ##
-  ## This should be a **YAML LIST** of rules, each with a name, regex, replacement, and optional
-  ## permanent flag (which defaults to "false"). These rules will be added as traefik Middleware
-  ## definitions in middleware-redirects-public.yaml
-  ##
-  ## Example syntax:
-  ##     rewriteRules:
-  ##       - name: sitemap-redirect
-  ##         regex: "^https?://([^/]+)/(sitemap.+)"
-  ##         replacement: "https://${1}/metacat/sitemaps/${2}"
-  ##         permanent: false  # optional; defaults to "false"
-  ##       - name: robots-redirect
-  ##         regex: "^https?://([^/]+)/robots.txt"
-  ##         replacement: "https://${1}/metacat/robots.txt"
-  ##
-  ## Traefik supports regex capture groups using the syntax ( ), which can be back-referenced using
-  ## the syntax ${1}, ${2}, etc. However, no server variables are available (like nginx's ${host},
-  ## ${request_uri}, etc.)
-  ##
-  rewriteRules:
-    - name: trailing-slash
-      regex: "^https?://([^/]+)/wp-admin$"
-      replacement: "https://${1}/wp-admin/"
-
   annotations:
     ## OK to auto-generate a cert for admin url (since hostname is unique and not shared by other
     ## ingresses), PROVIDED WE USE A tlsSecretName THAT IS DIFFERENT FROM THE REGULAR ADC TLS SECRET
     ##
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    ## proxy-body-size must be at least as big as the PHP post_max_size setting
+    ## (See wordpress.uploadLimits.postMaxSize)
+    ##
+    nginx.ingress.kubernetes.io/proxy-body-size: "105m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      # Normalize admin URL without a trailing slash before proxying to WordPress.
+      if ($request_uri = "/wp-admin") {
+        return 308 /wp-admin/;
+      }
 
+      # Prevent XMLRPC attacks on Wordpress
+      if ($request_uri ~* "^/xmlrpc\.php$") {
+        return 403;
+      }
+    nginx.ingress.kubernetes.io/whitelist-source-range: |
+      128.111.61.0/24,
+      128.111.64.0/22,
+      128.111.85.0/24,
+      128.111.180.0/22,
+      128.111.188.0/22,
+      128.111.196.0/23,
+      207.71.230.208/29
   extraPaths:
     - path: /wp-login.php
       pathType: Exact
