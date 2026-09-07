@@ -21,13 +21,14 @@ data:
 
         AllowEncodedSlashes On
         AcceptPathInfo      On
+
 {{ if .Values.extraVhostConfig }}
 {{ .Values.extraVhostConfig | indent 8 }}
 {{- end }}
 
         # ----- Aliases and directory access -----
 
-        Alias "/icons/" "{{ .Values.iconFilePath }}/"
+        Alias "/icons" "{{ .Values.iconFilePath }}"
         <Directory "{{ .Values.iconFilePath }}">
           Options +Indexes
           Require all granted
@@ -35,7 +36,7 @@ data:
 
       {{- range $p := $.Values.routes }}
         {{- if $p.filePath }}
-        Alias "{{ $p.ingressPath }}/" "{{ $p.filePath }}/"
+        Alias "{{ $p.ingressPath }}" "{{ $p.filePath }}"
         <Directory "{{ $p.filePath }}">
             Options +FollowSymlinks +Indexes
             Require all granted

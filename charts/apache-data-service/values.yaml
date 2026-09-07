@@ -47,11 +47,11 @@ extraVolumeMounts:
 ## @param ingress.iconFilePath filesystem path to default icons shipped with Apache image.
 ## Absolute file path: use leading slash but NO TRAILING SLASH!
 ## e.g:
-## iconFilePath: /usr/local/apache2/icons
+## iconFilePath: /usr/share/httpd/icons
 ##
 ## (Also see 'ingress.iconPath')
 ##
-iconFilePath: /usr/local/apache2/icons
+iconFilePath: /usr/share/httpd/icons
 
 ## @param routes An array with additional arbitrary URI paths for static files to be served
 ## Don't define backend; this is auto-populated to point to the Apache service

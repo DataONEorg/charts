@@ -33,8 +33,8 @@ spec:
           command:
             - httpd
             - -DFOREGROUND
-            - -C
-            - IncludeOptional conf/vhosts/*.conf
+            - -c
+            - IncludeOptional /usr/local/apache2/conf/vhosts/*.conf
             - -f
             - /usr/local/apache2/conf/httpd.conf
           ports:
