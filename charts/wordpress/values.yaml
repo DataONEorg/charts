@@ -68,7 +68,10 @@ wordpress:
             done
           ) &
           exit 0
-  ## WordPress hokey internal update cron is disabled, and instead we run it from a proper cron job
+  ## WordPress hokey internal cron is disabled, and instead we run it from a proper cron job. Each
+  ## run processes the WP-Cron event queue (scheduled posts, cleanups, plugin jobs, etc.), and the
+  ## first run of each hour also applies updates. Keep this at every 10 mins, since the hourly
+  ## update check assumes that interval.
   ## Min  Hour Day  Month Weekday
   ##  *    *    *    *    *  command to be executed
   ##  ┬    ┬    ┬    ┬    ┬
@@ -77,7 +80,7 @@ wordpress:
   ##  │    │    └───────────  Day      (1..31)
   ##  │    └────────────────  Hour     (0..23)
   ##  └─────────────────────  Minute   (0..59)
-  updateSchedule: "31 */6 * * *"  # every 6 hours at 31 mins past
+  updateSchedule: "1-59/10 * * * *"  # every 10 mins, at 1, 11, 21... mins past
 
 mariadb:
   autoUpgrade: true
