@@ -48,6 +48,7 @@ ingress:
   tlsSecretName: ingress-wp-tls-cert
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  metacatMtlsPolicyName: metacatbrooke-mtls-policy
 
 adminIngress:
   ## @param adminIngress.host The domain name of the WordPress Admin site (eg: "wp-admin.arcticdata.io")

@@ -17,7 +17,7 @@ metadata:
     ## Harmless if mTLS is not used, since TLSOption clientAuthType is 'VerifyClientCertIfGiven'
     ## (so ignores if no cert)
     traefik.ingress.kubernetes.io/router.tls.options: "{{ .Release.Namespace -}}
-        -{{ .Release.Name }}-mtls-policy@kubernetescrd"
+        -{{ required "ingress.metacatMtlsPolicyName MUST BE OVERRIDDEN" .Values.ingress.metacatMtlsPolicyName }}@kubernetescrd"
 spec:
   ingressClassName: {{ .Values.adminIngress.className }}
   rules:
