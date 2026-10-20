@@ -11,6 +11,14 @@ metadata:
     {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
     {{- end }}
+    ## Not actually used by this chart, but REQUIRED when multiple ingress definitions are
+    ## co-deployed with metacat, otherwise Traefik reverts to no client certificate validation,
+    ## breaking mutual TLS (mTLS) for metacat.
+    ## See https://doc.traefik.io/traefik/v2.11/https/tls/#conflicting-tls-options
+    ## Harmless if mTLS is not used, since TLSOption clientAuthType is 'VerifyClientCertIfGiven'
+    ## (so ignores if no cert)
+    traefik.ingress.kubernetes.io/router.tls.options: "{{ .Release.Namespace -}}
+        -{{ .Release.Name }}-mtls-policy@kubernetescrd"
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:

@@ -129,6 +129,17 @@ ingress:
   path: /
   annotations: {}
 
+  ## @param ingress.d1CaCertSecretName Name of Secret containing DataONE CA certificate chain
+  ## For DataONE Replication -- mutual authentication with x509 client-side certs.
+  ## Not actually used by this chart, but REQUIRED when multiple ingress definitions are co-deployed
+  ## with metacat, otherwise Traefik reverts to no client certificate validation, breaking mutual
+  ## TLS (mTLS) for metacat.
+  ## See https://doc.traefik.io/traefik/v2.11/https/tls/#conflicting-tls-options
+  ## Harmless if mTLS is not used, since TLSOption clientAuthType is 'VerifyClientCertIfGiven'
+  ## (so ignores if no cert). Set this to the same value as Metacat's ingress.d1CaCertSecretName
+  ##
+  d1CaCertSecretName: d1-ca-chain
+
   ## @param ingress.rewriteRules Traefik rewrite rules that will be added to the middleware chain
   ##
   ## This should be a **YAML LIST** of rules, each with a name, regex, replacement, and optional
